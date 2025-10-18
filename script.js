@@ -1,35 +1,38 @@
+// script.js
+
 // Définition du portefeuille utilisateur
-// INITIALISATION : Ajout de plusieurs actions pour garantir que le tableau ne soit pas vide au chargement.
+// Utilisé pour stocker les actions sélectionnées par l'utilisateur (Ticker et Quantité)
 let portefeuilleUtilisateur = [
     { "Ticker": "TTE.PA", "Quantite": 100 },
     { "Ticker": "SAN.PA", "Quantite": 50 },
-    { "Ticker": "AI.PA", "Quantite": 80 }
+    { "Ticker": "SW.PA", "Quantite": 20 } 
 ];
 
 // --- SIMULATION DU MOTEUR DYNAMIQUE ---
 
 function simulerAcquisitionCours(url_cotation) {
-    // Les prix sont simulés pour permettre le calcul du rendement actuel
+    // Les prix simulés doivent couvrir TOUTES les actions que vous ajoutez dans data.js.
     if (url_cotation.includes("totalenergies")) return 55.0; 
-    if (url_cotation.includes("hermes")) return 2100.0;     
     if (url_cotation.includes("sanofi")) return 86.5;       
-    if (url_cotation.includes("icade")) return 25.0;        
-    if (url_cotation.includes("air-liquide")) return 173.0;
+    if (url_cotation.includes("sodexo")) return 55.0; 
+    if (url_cotation.includes("icade")) return 25.0;
     
-    return 5.0; // Prix par défaut
+    // Prix par défaut: S'applique à toutes les autres actions non simulées explicitement.
+    return 10.0; 
 }
 
 // --- FONCTIONS D'ACTION UTILISATEUR ---
 
 function ajouterAction() {
-    let tickerAAjouter = prompt("Entrez le Ticker de l'action SBF 120 à ajouter (ex: RMS.PA, ICAD.PA) :").trim().toUpperCase();
+    let tickerAAjouter = prompt("Entrez le Ticker de l'action SBF 120 à ajouter :").trim().toUpperCase();
     
     if (!tickerAAjouter) return; 
 
+    // Recherche dans la base DATA_SBF120 complète
     const actionStatique = DATA_SBF120.find(a => a.Ticker === tickerAAjouter);
 
     if (!actionStatique) {
-        alert(`Ticker '${tickerAAjouter}' non trouvé dans la base SBF 120. Vérifiez la saisie.`);
+        alert(`Ticker '${tickerAAjouter}' non trouvé dans la base SBF 120.`);
         return;
     }
 
@@ -44,11 +47,14 @@ function ajouterAction() {
     const indexExistant = portefeuilleUtilisateur.findIndex(a => a.Ticker === tickerAAjouter);
     
     if (indexExistant !== -1) {
+        // Mise à jour si l'action existe déjà
         portefeuilleUtilisateur[indexExistant].Quantite += quantite;
     } else {
+        // Ajout de la nouvelle action
         portefeuilleUtilisateur.push({ Ticker: tickerAAjouter, Quantite: quantite });
     }
 
+    // L'appel à rafraichirAffichageTracker() est CRUCIAL ici
     rafraichirAffichageTracker();
     alert(`${quantite} actions de ${actionStatique.Societe} (${tickerAAjouter}) ajoutées!`);
 }
@@ -73,9 +79,9 @@ function rafraichirAffichageTracker() {
             const portefeuilleInfo = portefeuilleUtilisateur.find(p => p.Ticker === actionSBF.Ticker);
             
             let action = { ...actionSBF };
-            action.Quantite = portefeuilleInfo.Quantite;
+            action.Quantite = portefeuilleInfo.Quantite; // Assure que la quantité est tirée du portefeuille
             
-            // Recalcul des dynamiques ($C_t$ et $R_t$)
+            // Recalcul des dynamiques
             const cours_actuel = simulerAcquisitionCours(action.URL_Cotation);
             action.Cours_Actuel = cours_actuel;
             
@@ -85,17 +91,14 @@ function rafraichirAffichageTracker() {
             }
             action.Rendement_Actuel = parseFloat(rendement_actuel.toFixed(2));
 
-            // Placeholders
             action.Versement = action.Frequence > 0 ? "2024-XX-XX" : "N/A";
             action.Statut = action.Frequence > 0 ? "Prévu" : "N/A";
             
             return action;
         });
 
-    // 2. Mettre à jour la variable globale pour le tri
     window.DONNEES_TRACKER_ACTUALISEES = dataAAfficher;
     
-    // 3. Afficher les données
     peuplerTableau(dataAAfficher); 
 }
 
@@ -130,7 +133,6 @@ function peuplerTableau(data) {
         row.insertCell().innerHTML = `<button onclick="supprimerAction('${action.Ticker}')">X</button>`;
     });
 
-    // Mise à jour des totaux en haut de page
     document.getElementById('societes').textContent = totalSocietes;
     document.getElementById('total_estime_marche').textContent = `${totalValeurMarche.toFixed(2)} €`;
 }
@@ -163,10 +165,8 @@ function sortTable(key) {
 // --- INITIALISATION ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialiser l'affichage avec le portefeuille utilisateur
     rafraichirAffichageTracker(); 
 
-    // Gestion des écouteurs de tri
     document.querySelectorAll('.sortable').forEach(header => {
         header.addEventListener('click', () => {
             sortTable(header.getAttribute('data-sort'));
