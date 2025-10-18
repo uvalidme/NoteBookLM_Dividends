@@ -4,40 +4,58 @@
 let portefeuilleUtilisateur = [
     { "Ticker": "TTE.PA", "Quantite": 100 },
     { "Ticker": "SAN.PA", "Quantite": 50 },
-    { "Ticker": "SW.PA", "Quantite": 20 } 
+    { "Ticker": "SW.PA", "Quantite": 20 }, 
+    { "Ticker": "CS.PA", "Quantite": 40 }, 
+    { "Ticker": "AC.PA", "Quantite": 30 } 
 ];
 
-// --- SIMULATION REMPLACÉE PAR LA RÉCUPÉRATION ASYNCHRONE ---
-// Cette fonction simule l'appel à une API réelle et renvoie les cours.
-// REMPLACER cette fonction par un fetch réel.
+// --- RÉCUPÉRATION ASYNCHRONE DES COURS ---
 async function fetchCoursActuels(tickers) {
-    // EN PRODUCTION, CECI SERAIT UN APPEL API RÉEL VERS VOTRE BACKEND :
-    // const response = await fetch('/api/get-quotes', { method: 'POST', body: JSON.stringify({ tickers }) });
-    // const realTimeQuotes = await response.json();
-    // return realTimeQuotes;
+    // EN PRODUCTION, VOUS DÉCOMMENTEREZ CECI POUR APPELER LE BACKEND :
+    /*
+    try {
+        const response = await fetch('/api/get-quotes', {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ tickers: tickers }) 
+        });
+        if (!response.ok) throw new Error("Erreur de récupération des cours via l'API.");
+        return await response.json();
+    } catch (e) {
+        console.error("Erreur de Fetch API, retour à la simulation:", e);
+        // Fallback vers la simulation en cas d'échec de l'API
+        return simulerCoursLocaux(tickers);
+    }
+    */
 
-    // SIMULATION AVEC PRIX FIXES EN ATTENDANT LE BACKEND :
+    // --- SIMULATION LOCALE (Mode actuel) ---
+    return simulerCoursLocaux(tickers);
+}
+
+function simulerCoursLocaux(tickers) {
+    // SIMULATION AVEC PRIX FIXES CORRIGÉS :
     const simulateur = {
         "TTE.PA": 55.00,
         "SAN.PA": 86.50,
         "SW.PA": 90.00,
-        "AC.PA": 41.57, // Cours corrigé
+        "AC.PA": 41.57, // Corrigé
+        "CS.PA": 39.41, // Corrigé
         "ICAD.PA": 25.00,
         "RUI.PA": 31.00,
-        "ATO.PA": 5.00,
         "AI.PA": 173.0,
-        // ... Ajouter ici les 120+ prix tant que le backend n'est pas prêt ...
+        // ... (Ajoutez toutes les autres valeurs ici) ...
     };
     
-    // Filtre pour ne renvoyer que les Tickers demandés
     const realTimeQuotes = {};
     tickers.forEach(t => {
-        realTimeQuotes[t] = simulateur[t] || 10.0; // Utilise 10.0 si non trouvé dans la simulation
+        // Retourne la valeur simulée ou 10.0 par défaut
+        realTimeQuotes[t] = simulateur[t] || 10.0; 
     });
     return realTimeQuotes;
 }
 
-// --- FONCTIONS D'ACTION UTILISATEUR (Aucun changement) ---
+
+// --- FONCTIONS D'ACTION UTILISATEUR ---
 
 function ajouterAction() {
     let tickerAAjouter = prompt("Entrez le Ticker de l'action SBF 120 à ajouter :").trim().toUpperCase();
@@ -81,7 +99,7 @@ function editerAction() {
 }
 
 
-// --- FONCTION DE RAFRAÎCHISSEMENT ET DE CALCUL (DEVIENT ASYNCHRONE) ---
+// --- FONCTION DE RAFRAÎCHISSEMENT ET DE CALCUL (ASYNCHRONE) ---
 
 async function rafraichirAffichageTracker() {
     // 1. Liste des Tickers à rafraîchir
@@ -99,7 +117,7 @@ async function rafraichirAffichageTracker() {
             let action = { ...actionSBF };
             action.Quantite = portefeuilleInfo.Quantite;
             
-            // UTILISE LE COURS RÉCUPÉRÉ (ou le défaut si l'API ne le trouve pas)
+            // UTILISE LE COURS RÉCUPÉRÉ
             const cours_actuel = coursActuels[action.Ticker] || 0; 
             action.Cours_Actuel = cours_actuel;
             
@@ -121,10 +139,6 @@ async function rafraichirAffichageTracker() {
 }
 
 function peuplerTableau(data) {
-    // ... (Le corps de peuplerTableau est trop long, il reste identique) ...
-    // NOTE : Assurez-vous que l'initialisation appelle rafraichirAffichageTracker() sans 'await'
-    // car 'DOMContentLoaded' n'est pas asynchrone, mais la fonction appellée l'est.
-
     const tbody = document.querySelector('#trackerTable tbody');
     tbody.innerHTML = '';
     let totalValeurMarche = 0;
@@ -160,16 +174,34 @@ function peuplerTableau(data) {
 }
 
 
-// --- GESTION DU TRI (Reste identique) ---
+// --- GESTION DU TRI ---
 
 function sortTable(key) {
-    // ... (Reste identique)
+    if (!window.DONNEES_TRACKER_ACTUALISEES) return;
+    
+    const sortedData = [...window.DONNEES_TRACKER_ACTUALISEES].sort((a, b) => {
+        const keyMap = {
+            'cours': 'Cours_Actuel',
+            'rendement': 'Rendement_Actuel' 
+        };
+        
+        const actualKey = keyMap[key] || key.charAt(0).toUpperCase() + key.slice(1);
+        
+        const keyA = a[actualKey];
+        const keyB = b[actualKey];
+
+        if (typeof keyA === 'number' && typeof keyB === 'number') {
+            return keyB - keyA;
+        }
+        return 0;
+    });
+    peuplerTableau(sortedData);
 }
 
-// --- INITIALISATION (Reste identique) ---
+// --- INITIALISATION ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Appel asynchrone (non bloquant)
+    // Appel de la fonction de rafraîchissement asynchrone
     rafraichirAffichageTracker(); 
 
     document.querySelectorAll('.sortable').forEach(header => {
