@@ -1,9 +1,9 @@
-// api/get-quotes.js (Intégration de l'API Financial Modeling Prep)
+// api/get-quotes.js (Intégration de l'API Alpha Vantage)
 
-// L'URL de base pour la récupération de plusieurs cotations (Quote)
-const API_BASE_URL = "https://financialmodelingprep.com/api/v3/quote/";
-// ATTENTION : REMPLACER 'YOUR_FMP_API_KEY' par votre clé réelle
-const API_KEY = D2uuJXHZ7MT15D8dimVS2lflRvOWl4DS; 
+// Clé API fournie
+const API_KEY = "NG0Z3TKNZTJQUTNC"; 
+// Endpoint Alpha Vantage pour obtenir les cotations en temps réel (Global Quote)
+const API_BASE_URL = "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=";
 
 // Fonction de secours (Fallback) pour les Tickers non trouvés ou en cas d'échec API
 function getFallbackPrice(ticker) {
@@ -14,21 +14,37 @@ function getFallbackPrice(ticker) {
         "CS.PA": 39.41,
         "AC.PA": 41.57,
         "SW.PA": 90.00,
+        "URW.PA": 89.44, // Correction demandée
         // ... ajoutez ici d'autres prix critiques si vous le souhaitez ...
     };
-    return FALLBACK_PRICES[ticker] || 10.0; // Prix par défaut de 10.0 si inconnu
+    return FALLBACK_PRICES[ticker] || 10.0; 
 }
 
-// Adapte les Tickers français (ex: TTE.PA) pour les APIs américaines qui nécessitent un suffixe .PA
-function normalizeTickers(tickers) {
-    // FMP nécessite des Tickers formatés selon leur base de données
-    return tickers.map(ticker => {
-        // Supprime le suffixe .PA si nécessaire, ou le conserve si l'API le gère
-        // Dans le doute, conservons-le, mais vérifiez la documentation FMP pour les actions Euronext Paris.
-        // Souvent, FMP utilise le format "TTE.PA" ou cherche simplement la bourse.
-        return ticker; 
-    });
+// Fonction utilitaire pour récupérer le prix d'un Ticker
+async function fetchPriceFromAlphaVantage(ticker) {
+    const apiUrl = `${API_BASE_URL}${ticker}&apikey=${API_KEY}`;
+    
+    // Le fetch est synchrone dans la boucle, mais Node.js le gère bien en Serverless
+    const response = await fetch(apiUrl);
+    
+    if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    // Alpha Vantage utilise un objet Global Quote
+    const quote = data['Global Quote'];
+
+    if (quote && quote['05. price']) {
+        // '05. price' est la clé pour la cotation actuelle
+        return parseFloat(quote['05. price']);
+    }
+
+    // Le Ticker est valide mais n'a pas été trouvé (message d'erreur FMP/AlphaV)
+    return null;
 }
+
 
 module.exports = async (req, res) => {
     if (req.method !== 'POST') {
@@ -40,39 +56,19 @@ module.exports = async (req, res) => {
         if (!tickers || !Array.isArray(tickers) || tickers.length === 0) {
             return res.status(400).json({ error: 'Liste de tickers manquante ou invalide.' });
         }
-
-        const normalizedTickers = normalizeTickers(tickers);
-        const tickersString = normalizedTickers.join(','); // Ex: TTE.PA,SAN.PA
-
-        // Construction de l'URL d'appel à FMP
-        const apiUrl = `${API_BASE_URL}${tickersString}?apikey=${API_KEY}`;
         
-        console.log(`Appel API FMP pour: ${tickersString}`);
-
-        // Appel API côté serveur (Node.js/Vercel)
-        const response = await fetch(apiUrl);
-        
-        if (!response.ok) {
-            throw new Error(`Erreur API FMP: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json(); // Data est un tableau de résultats
         const quotes = {};
 
-        // Extraction des prix
-        if (Array.isArray(data)) {
-            data.forEach(item => {
-                // FMP utilise 'symbol' pour le Ticker et 'price' pour le cours actuel
-                if (item.symbol && item.price) {
-                    quotes[item.symbol.toUpperCase()] = item.price;
-                }
-            });
-        }
-        
-        // Assurer qu'il y a un prix pour chaque Ticker demandé
+        // ATTENTION: Alpha Vantage gratuit limite les appels (5 par minute, 500 par jour).
+        // Nous traitons les Tickers un par un, ce qui peut ralentir si la liste est longue.
+
         for (const ticker of tickers) {
-            if (quotes[ticker] === undefined) {
-                 // Utilise le prix de secours (fallback) si FMP ne trouve pas le Ticker
+            let price = await fetchPriceFromAlphaVantage(ticker);
+            
+            if (price !== null) {
+                quotes[ticker] = price;
+            } else {
+                // Ticker non trouvé par Alpha Vantage
                 quotes[ticker] = getFallbackPrice(ticker); 
             }
         }
@@ -80,9 +76,9 @@ module.exports = async (req, res) => {
         res.status(200).json(quotes);
 
     } catch (error) {
-        console.error('Erreur Serverless Function FMP:', error.message);
+        console.error('Erreur Serverless Function Alpha Vantage:', error.message);
         
-        // En cas d'échec critique de l'API (ex: clé invalide ou service hors ligne)
+        // En cas d'échec critique (clé invalide, limite dépassée), on retourne le Fallback pour tous
         const fallbackQuotes = {};
         const tickersToFallback = req.body.tickers || [];
         for (const ticker of tickersToFallback) {
