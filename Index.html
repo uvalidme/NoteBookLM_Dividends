@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracker des Dividendes SBF 120 (Dynamique)</title>
+    
+    <!-- 1. Lien vers le fichier de style (à créer à l'Étape 2) -->
+    <link rel="stylesheet" href="styles.css"> 
+    
+</head>
+<body>
+
+    <header>
+        <h1>📅 Tracker des Dividendes SBF 120</h1>
+    </header>
+
+    <!-- Section de résumé (similaire à la Source [1]) -->
+    <div class="summary-container">
+        <div class="summary-box">
+            Versés (€): <span id="verse">0€</span> [1]
+        </div>
+        <div class="summary-box">
+            Prochains (€): <span id="prochains">0€</span> [1]
+        </div>
+        <div class="summary-box">
+            Total annuel (€): <span id="annuel">0€</span> [1]
+        </div>
+        <div class="summary-box">
+            Sociétés: <span id="societes">0</span> [1]
+        </div>
+        <div class="summary-box market-value">
+            Total estimé (Valeur Marché) : <span id="total_estime_marche">0€</span> [1]
+        </div>
+    </div>
+
+    <!-- Tableau de suivi analytique, fusionnant les données du portefeuille et les analyses -->
+    <section class="tracker-section">
+        <h3>Suivi Analytique (SBF 120)</h3>
+        
+        <table id="trackerTable">
+            <thead>
+                <tr>
+                    <th>Société</th>
+                    <th>Ticker</th>
+                    <th class="sortable" data-sort="cours">Cours Actuel (€)</th>
+                    <th>Dividende (D)</th>
+                    <th class="sortable" data-sort="rendement">Rendement Actuel (%)</th>
+                    <th>Payout Ratio (%)</th>
+                    <th>Historique (I/C)</th>
+                    <th>Fréq.</th>
+                    <!-- Colonnes de gestion de portefeuille [1] -->
+                    <th>Quantité</th>
+                    <th>Versement</th>
+                    <th>Statut</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Les données seront insérées ici par JavaScript -->
+            </tbody>
+        </table>
+        
+        <div class="controls">
+            <!-- Boutons similaires à "Ajouter une action" et "Éditer" de la Source [1] -->
+            <button onclick="ajouterAction()">Ajouter une action SBF 120</button>
+            <button onclick="editerAction()">Éditer</button> [1]
+            <p class="local-data">Données sauvegardées localement (Simulation)</p>
+        </div>
+    </section>
+
+    <!-- 2. Lien vers le fichier de données consolidées (à créer à l'Étape 3) -->
+    <script src="data.js"></script>
+    
+    <!-- 3. Lien vers le fichier de logique et d'affichage (à créer à l'Étape 4) -->
+    <script src="script.js"></script> 
+    
+</body>
+</html>
