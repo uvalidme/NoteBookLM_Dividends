@@ -1,4 +1,4 @@
-// Base de données statique consolidée (Fusion des sources)
+// Base de données statique consolidée (DATA_SBF120)
 
 const DATA_SBF120 = [
     {
@@ -10,7 +10,7 @@ const DATA_SBF120 = [
         "Ininterruption": 30,
         "Croissance": 30,
         "Frequence": 4,
-        "URL_Cotation": "https://www.easybourse.com/action-cours/totalenergies-se/intraday/...",
+        "URL_Cotation": "https://www.easybourse.com/action-cours/totalenergies-se/intraday/FR0000120271-25",
         "Pays": "FRA"
     },
     {
@@ -22,7 +22,7 @@ const DATA_SBF120 = [
         "Ininterruption": 30,
         "Croissance": 30,
         "Frequence": 2,
-        "URL_Cotation": "https://www.easybourse.com/action-cours/hermes-intl/intraday/...",
+        "URL_Cotation": "https://www.easybourse.com/action-cours/hermes-intl/intraday/FR0000052292-25",
         "Pays": "FRA"
     },
     {
@@ -34,31 +34,7 @@ const DATA_SBF120 = [
         "Ininterruption": 30,
         "Croissance": 30,
         "Frequence": 1,
-        "URL_Cotation": "https://www.easybourse.com/action-cours/sanofi/intraday/...",
-        "Pays": "FRA"
-    },
-    {
-        "Societe": "ICADE",
-        "Ticker": "ICAD.PA",
-        "Dividende_Fixe": 4.31,
-        "Rendement_Initial": 19.48,
-        "Payout_Ratio": -119.09,
-        "Ininterruption": 21,
-        "Croissance": 1,
-        "Frequence": 2,
-        "URL_Cotation": "https://www.easybourse.com/action-cours/icade/intraday/...",
-        "Pays": "FRA"
-    },
-    {
-        "Societe": "ATOS",
-        "Ticker": "ATO.PA",
-        "Dividende_Fixe": 0,
-        "Rendement_Initial": 0,
-        "Payout_Ratio": 0,
-        "Ininterruption": 0,
-        "Croissance": 0,
-        "Frequence": 0,
-        "URL_Cotation": "https://www.easybourse.com/action-cours/atos/intraday/...",
+        "URL_Cotation": "https://www.easybourse.com/action-cours/sanofi/intraday/FR0000120578-25",
         "Pays": "FRA"
     },
     {
@@ -70,8 +46,32 @@ const DATA_SBF120 = [
         "Ininterruption": 30,
         "Croissance": 30,
         "Frequence": 1,
-        "URL_Cotation": "https://www.easybourse.com/action-cours/air-liquide/intraday/...",
+        "URL_Cotation": "https://www.easybourse.com/action-cours/air-liquide/intraday/FR0000120073-25",
+        "Pays": "FRA"
+    },
+    {
+        "Societe": "ICADE",
+        "Ticker": "ICAD.PA",
+        "Dividende_Fixe": 4.31,
+        "Rendement_Initial": 19.48,
+        "Payout_Ratio": -119.09,
+        "Ininterruption": 21,
+        "Croissance": 1,
+        "Frequence": 2,
+        "URL_Cotation": "https://www.easybourse.com/action-cours/icade/intraday/FR0000035081-25",
+        "Pays": "FRA"
+    },
+    {
+        "Societe": "ATOS",
+        "Ticker": "ATO.PA",
+        "Dividende_Fixe": 0,
+        "Rendement_Initial": 0,
+        "Payout_Ratio": 0,
+        "Ininterruption": 0,
+        "Croissance": 0,
+        "Frequence": 0,
+        "URL_Cotation": "https://www.easybourse.com/action-cours/atos/intraday/FR001400X2S4-25",
         "Pays": "FRA"
     }
-    // ... À compléter avec les 120+ actions
+    // Ajoutez ici le reste des 120 actions en suivant le même format
 ];
