@@ -9,53 +9,54 @@ let portefeuilleUtilisateur = [
     { "Ticker": "AC.PA", "Quantite": 30 } 
 ];
 
-// --- RÉCUPÉRATION ASYNCHRONE DES COURS ---
+// --- RÉCUPÉRATION ASYNCHRONE DES COURS (MAJ pour utiliser le backend /api/get-quotes) ---
 async function fetchCoursActuels(tickers) {
-    // EN PRODUCTION, VOUS DÉCOMMENTEREZ CECI POUR APPELER LE BACKEND :
-    /*
     try {
+        // --- BLOC DE SIMULATION SUPPRIMÉ / REMPLACÉ PAR FETCH ---
+        // Appel au point de terminaison Serverless (Serverless Function sur Vercel)
         const response = await fetch('/api/get-quotes', {
              method: 'POST',
              headers: { 'Content-Type': 'application/json' },
              body: JSON.stringify({ tickers: tickers }) 
         });
-        if (!response.ok) throw new Error("Erreur de récupération des cours via l'API.");
+        
+        if (!response.ok) {
+            // Log si l'appel API échoue (ex: erreur 500 sur le serveur)
+            throw new Error(`Erreur HTTP ${response.status} lors de la récupération des cours.`);
+        }
+        
+        // Retourne le JSON des prix envoyés par get-quotes.js
         return await response.json();
+        
     } catch (e) {
-        console.error("Erreur de Fetch API, retour à la simulation:", e);
-        // Fallback vers la simulation en cas d'échec de l'API
+        console.error("Erreur critique de communication avec le backend. Affichage par défaut (10.0 €):", e);
+        
+        // Fallback: Retourne des valeurs par défaut si le backend échoue complètement
         return simulerCoursLocaux(tickers);
     }
-    */
-
-    // --- SIMULATION LOCALE (Mode actuel) ---
-    return simulerCoursLocaux(tickers);
 }
 
+// Fonction de simulation locale (Conservée uniquement comme mécanisme de repli)
 function simulerCoursLocaux(tickers) {
-    // SIMULATION AVEC PRIX FIXES CORRIGÉS :
+    // Si l'API échoue, nous retournons au mode manuel avec les derniers prix connus
     const simulateur = {
         "TTE.PA": 55.00,
         "SAN.PA": 86.50,
         "SW.PA": 90.00,
-        "AC.PA": 41.57, // Corrigé
-        "CS.PA": 39.41, // Corrigé
-        "ICAD.PA": 25.00,
-        "RUI.PA": 31.00,
-        "AI.PA": 173.0,
-        // ... (Ajoutez toutes les autres valeurs ici) ...
+        "AC.PA": 41.57, 
+        "CS.PA": 39.41, 
+        // ... Ajouter les autres prix ici si vous voulez un fallback précis ...
     };
     
-    const realTimeQuotes = {};
+    const fallbackQuotes = {};
     tickers.forEach(t => {
-        // Retourne la valeur simulée ou 10.0 par défaut
-        realTimeQuotes[t] = simulateur[t] || 10.0; 
+        fallbackQuotes[t] = simulateur[t] || 10.0; 
     });
-    return realTimeQuotes;
+    return fallbackQuotes;
 }
 
 
-// --- FONCTIONS D'ACTION UTILISATEUR ---
+// --- FONCTIONS D'ACTION UTILISATEUR (Aucun changement dans cette section) ---
 
 function ajouterAction() {
     let tickerAAjouter = prompt("Entrez le Ticker de l'action SBF 120 à ajouter :").trim().toUpperCase();
@@ -105,7 +106,7 @@ async function rafraichirAffichageTracker() {
     // 1. Liste des Tickers à rafraîchir
     const tickersToFetch = portefeuilleUtilisateur.map(p => p.Ticker);
 
-    // 2. Récupérer les cours actuels via l'API (simulée ici)
+    // 2. Récupérer les cours actuels via l'API (maintenant le backend /api/get-quotes.js)
     const coursActuels = await fetchCoursActuels(tickersToFetch);
 
     // 3. Filtrer et enrichir les données
@@ -117,7 +118,7 @@ async function rafraichirAffichageTracker() {
             let action = { ...actionSBF };
             action.Quantite = portefeuilleInfo.Quantite;
             
-            // UTILISE LE COURS RÉCUPÉRÉ
+            // UTILISE LE COURS RÉCUPÉRÉ DU BACKEND
             const cours_actuel = coursActuels[action.Ticker] || 0; 
             action.Cours_Actuel = cours_actuel;
             
