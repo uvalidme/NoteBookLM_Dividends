@@ -1,0 +1,70 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f4f7f6;
+}
+
+header h1 {
+    color: #004d40;
+    margin-bottom: 20px;
+}
+
+/* Style de la section résumé, inspiré de la Source [1] */
+.summary-container {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.summary-box {
+    padding: 15px 20px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    border-radius: 5px;
+    font-size: 1.1em;
+}
+
+.market-value {
+    background-color: #e0f2f1;
+    font-weight: bold;
+}
+
+/* Style du tableau */
+.tracker-section h3 {
+    margin-top: 0;
+}
+
+#trackerTable {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    background-color: #fff;
+}
+
+#trackerTable th, #trackerTable td {
+    border: 1px solid #e0e0e0;
+    padding: 10px;
+    text-align: left;
+}
+
+#trackerTable th {
+    background-color: #00796b;
+    color: white;
+    cursor: pointer;
+}
+
+.dynamic {
+    font-weight: bold;
+    color: #388e3c; /* Vert pour les valeurs dynamiques */
+}
+
+.controls button {
+    padding: 10px 15px;
+    margin-right: 10px;
+    background-color: #004d40;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
