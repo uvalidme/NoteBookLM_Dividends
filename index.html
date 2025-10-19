@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion des Dividendes SBF 120</title>
+    <title>Calendrier des Dividendes</title>
     <style>
         /* CSS Global */
         body {
             font-family: 'Arial', sans-serif;
             margin: 20px;
-            background-color: #f4f7f6; /* Fond léger */
+            background-color: #f4f7f6;
             color: #333;
         }
 
@@ -22,40 +22,44 @@
         }
 
         h3, h4 {
-            color: #1a4f78; /* Couleur bleue institutionnelle */
+            color: #1a4f78;
             border-bottom: 2px solid #e0e0e0;
             padding-bottom: 10px;
             margin-top: 0;
+            text-align: center; /* 1/ Centrer le titre */
+        }
+
+        /* Conteneur des métriques pour centrage */
+        .metrics-container {
+            text-align: center;
         }
 
         /* Indicateurs (Métrique) */
-        .metrics div {
+        .metrics {
             font-size: 1.1em;
             margin-bottom: 15px;
             border: 1px solid #ddd;
             padding: 10px;
             border-radius: 4px;
             background-color: #fafafa;
+            /* Flexbox pour gérer les sauts de ligne */
+            display: inline-block;
+        }
+        
+        .metrics-societies {
+            display: block; /* 3/ Force le champ Sociétés sur une nouvelle ligne */
+            margin-top: 5px;
         }
 
         /* Couleurs pour les totaux */
         #estimatedTotal {
             font-size: 1.5em;
             font-weight: bold;
-            color: #008000; /* Vert foncé */
+            color: #008000;
         }
-        #totalVerses {
-            color: #008000; 
-            font-weight: bold;
-        }
-        #totalProchains {
-            color: #ff9800; /* Orange pour les prochains */
-            font-weight: bold;
-        }
-        #totalAnnuel {
-            color: #1a4f78;
-            font-weight: bold;
-        }
+        #totalVerses { color: #008000; font-weight: bold; }
+        #totalProchains { color: #ff9800; font-weight: bold; }
+        #totalAnnuel { color: #1a4f78; font-weight: bold; }
 
         /* Tableau */
         table {
@@ -76,6 +80,14 @@
         }
         tr:nth-child(even) {
             background-color: #f9f9f9;
+        }
+
+        /* 4/ Centrer le contenu des colonnes spécifiques */
+        .col-center {
+            text-align: center !important;
+        }
+        .col-right {
+            text-align: right !important;
         }
 
         /* Input Quantité */
@@ -100,52 +112,33 @@
         }
 
         #editButton {
-            background-color: #ff9800; /* Orange pour l'édition/sauvegarde */
+            background-color: #ff9800;
             color: white;
         }
-        #editButton:hover {
-            background-color: #e68900;
-        }
-
         #addButton {
-            background-color: #4CAF50; /* Vert pour l'ajout */
+            background-color: #4CAF50;
             color: white;
-        }
-        #addButton:hover {
-            background-color: #45a049;
-        }
-        
-        /* Bouton Supprimer dans le tableau (défini dans script.js mais stylé ici) */
-        .action-cell button {
-            background-color: #f44336 !important;
-            padding: 5px 8px;
-            font-size: 0.8em;
-        }
-        .action-cell button:hover {
-            background-color: #da190b !important;
-        }
-
-        /* Statut (optionnel, si vous voulez colorer le texte du statut) */
-        .statut-Verse {
-            color: #008000;
-            font-weight: bold;
-        }
-        .statut-Prevu {
-            color: #ff9800;
         }
     </style>
 </head>
 <body>
 
 <section id="dividend-calendar">
-    <h3>📅 Gestion des Dividendes SBF 120</h3>
+    <!-- 1/ Titre remplacé et centré -->
+    <h3>📅 Calendrier des Dividendes SBF 120</h3> 
     
-    <div class="metrics">
-        Versés (€): <span id="totalVerses">0€</span> | Prochains (€): <span id="totalProchains">0€</span> | Total annuel (€): <span id="totalAnnuel">0€</span> | Sociétés: <span id="totalSocieties">0</span>
+    <!-- 2/ Conteneur pour centrer les métriques -->
+    <div class="metrics-container">
+        <div class="metrics">
+            Versés (€): <span id="totalVerses">0€</span> | Prochains (€): <span id="totalProchains">0€</span> | Total annuel (€): <span id="totalAnnuel">0€</span>
+            
+            <!-- 3/ Sociétés sur la deuxième ligne -->
+            <span class="metrics-societies">Sociétés: <span id="totalSocieties">0</span></span>
+        </div>
     </div>
 
     <hr>
-    <h4>Total estimé : <span id="estimatedTotal">0€</span></h4>
+    <h4 style="text-align: center;">Total estimé : <span id="estimatedTotal">0€</span></h4>
     
     <button id="editButton">Éditer</button>
     <button id="addButton">Ajouter une action SBF 120</button> 
@@ -155,13 +148,13 @@
             <tr>
                 <th>Société</th>
                 <th>Ticker</th>
-                <th>Quantité</th>
-                <th>Montant/action</th> 
-                <th>Total estimé</th>
-                <th>Versement</th>
-                <th>Date Prévue</th> 
-                <th>Statut</th>
-                <th>Action</th>
+                <th class="col-center">Quantité</th> <!-- 4/ Centré -->
+                <th class="col-center">Montant/action</th> <!-- 4/ Centré -->
+                <th class="col-center">Total estimé</th> <!-- 4/ Centré -->
+                <th class="col-center">Versement</th> <!-- 4/ Centré -->
+                <th class="col-center">Date Prévue</th> <!-- 4/ Centré -->
+                <th class="col-center">Statut</th> <!-- 4/ Centré -->
+                <th class="col-center">Action</th>
             </tr>
         </thead>
         <tbody id="dividendsTableBody">
