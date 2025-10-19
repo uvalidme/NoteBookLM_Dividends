@@ -14,7 +14,7 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         
-        /* Style critique pour l'en-tête de tri */
+        /* Style du header de tri */
         #header-societe-sort { 
             cursor: pointer; 
             background-color: #d1e7ff; 
@@ -22,7 +22,14 @@
         }
         
         #actions-utilisateur h4 { margin-top: 20px; border-bottom: 1px solid #004d99; padding-bottom: 5px; }
-        button { padding: 8px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button { padding: 8px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 3px;}
+        
+        /* Style du bouton Éditer dans le tableau */
+        .btn-action {
+            padding: 5px 10px;
+            background-color: #28a745;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
@@ -45,7 +52,7 @@
         <table>
             <thead>
                 <tr>
-                    <!-- ID CRITIQUE pour le tri (Cliquable) -->
+                    <!-- ID CRITIQUE pour le tri -->
                     <th id="header-societe-sort">Société</th> 
                     <th>Ticker</th>
                     <th>Quantité</th>
@@ -56,7 +63,7 @@
                     <th>Action</th>
                 </tr>
             </thead>
-            <!-- ID CRITIQUE pour l'affichage (tbody) -->
+            <!-- ID CRITIQUE pour l'affichage -->
             <tbody id="corps-dividendes">
                 <!-- Les lignes seront gérées par script.js -->
             </tbody>
@@ -64,7 +71,7 @@
     </section>
 
     <section id="actions-utilisateur">
-        <!-- Section Éditer -->
+        <!-- Titre Éditer -->
         <h4>Éditer</h4>
         <p>Total estimé : 0€</p>
         
