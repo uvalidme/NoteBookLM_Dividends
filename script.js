@@ -1,56 +1,67 @@
-// script.js
+// script.js qui fonctionne avant modif du 19/10/25 - 23:31
 
 const STOCK_LIST_KEY = 'dividendsDataList';
 let isEditing = false;
 
-// --- UTILITIES: Date Parsing Sécurisé (JJ/MM/AAAA) ---
+// --- MAPPING INTERNE DES PAIEMENTS SBF 120 (Sources) ---
+
+// Fonction de parsing sécurisé de JJ/MM/AAAA vers un objet Date
 function parseDateDDMMYYYY(dateStr) {
     if (!dateStr || dateStr === 'N/A') return null;
     
+    // Extraction des parties de la date
     const parts = dateStr.split('/');
+    // Assurez-vous que nous avons 3 parties
     if (parts.length !== 3) return null;
     
-    // Correction critique: Assurez-vous que l'ordre est bien ANNEE, MOIS - 1, JOUR
     const day = parseInt(parts, 10);
-    const month = parseInt(parts[1], 10) - 1; 
+    const month = parseInt(parts[1], 10) - 1; // Le mois est basé sur 0 (0 = Janvier)
     const year = parseInt(parts[2], 10);
     
+    // Vérification de base pour éviter les NaN
     if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
     
-    // Fixé à la fin de la journée (23:59:59) pour la comparaison
-    return new Date(year, month, day, 23, 59, 59);
+    // Création sécurisée de l'objet Date (YYYY, MM, DD)
+    return new Date(year, month, day, 23, 59, 59); // Fixé à la fin de la journée pour la comparaison
 }
 
 
-// --- MAPPING INTERNE DES PAIEMENTS SBF 120 (Incluant les sources [1-33]) ---
 function getSBF120PaymentSchedule() {
-    // Association des identifiants CSV aux Tickers SBF 120 réels (Sources [27, 28, 30, 31])
+    // Association des identifiants CSV aux Tickers SBF 120 réels [3-10]
     const MAPPING = {
         'TTEF': 'TTE.PA', 'PRTP': 'KER.PA', 'DBG': 'DBG.PA', 'HRMS': 'RMS.PA', 'GFCP': 'GFC.PA', 'LOIM': 'LI.PA', 'ICAD': 'ICAD.PA', 'STMPA': 'STMPA.PA', 'ARGAN': 'ARG.PA', 'STDM': 'DIM.PA', 'AIR': 'AIR.PA', 'SGEF': 'DG.PA', 'STLAM': 'STLAP.PA', 'LVMH': 'MC.PA', 'TFFP': 'TFI.PA', 'ENGIE': 'ENGI.PA', 'IPAR': 'ITP.PA', 'VCTP': 'VCT.PA', 'OPM': 'OPM.PA', 'VIV': 'VIV.PA', 'CVO': 'COV.PA', 'SCOR': 'SCR.PA', 'MERY': 'MERY.PA', 'BOUY': 'EN.PA', 'MMTP': 'MMT.PA', 'AXAF': 'CS.PA', 'OREP': 'OR.PA', 'DANO': 'BN.PA', 'ESLX': 'EL.PA', 'URW': 'URW.PA', 'RENA': 'RNO.PA', 'SASY': 'SAN.PA', 'VIE': 'VIE.PA', 'SCHN': 'SU.PA', 'VRLA': 'VRLA.PA', 'RXL': 'RXL.PA', 'SPIE': 'SPIE.PA', 'BNPP': 'BNP.PA', 'AIRP': 'AI.PA', 'JCDX': 'DEC.PA', 'NEXS': 'NEX.PA', 'CARM': 'CARM.PA', 'COFA': 'COFA.PA', 'IMTP': 'NK.PA', 'TCFP': 'HO.PA', 'CAPP': 'CAP.PA', 'TE': 'TE.PA', 'AM': 'AM.PA', 'FOUG': 'FGR.PA', 'MWDP': 'MF.PA', 'MICP': 'ML.PA', 'TEPRF': 'TEP.PA', 'EURA': 'RF.PA', 'ENX': 'ENX.PA', 'CAGR': 'ACA.PA', 'ELIS': 'ELIS.PA', 'VLLP': 'VK.PA', 'VLOF': 'FR.PA', 'SOGN': 'GLE.PA', 'AKE': 'AKE.PA', 'DAST': 'DSY.PA', 'AYV': 'AYV.PA', 'FDJU': 'FDJU.PA', 'SAF': 'SAF.PA', 'EXENS': 'EXENS.PA', 'LEGD': 'LR.PA', 'BICP': 'BB.PA', 'TRIA': 'TRI.PA', 'CARR': 'CA.PA', 'ERMT': 'ERA.PA', 'ACCP': 'AC.PA', 'GETP': 'GET.PA', 'ADP': 'ADP.PA', 'SEBF': 'SK.PA', 'SOPR': 'SOP.PA', 'ORAN': 'ORA.PA', 'IPN': 'IPSEN.PA', 'SGOB': 'SGO.PA', 'BIOX': 'BIM.PA', 'BOLL': 'BOL.PA', 'AMUN': 'AMUN.PA', 'EDEN': 'EDEN.PA', 'LTEN': 'ATE.PA', 'RUBF': 'RUI.PA', 'GTT': 'GTT.PA', 'PLNW': 'PLNW.PA', 'VIRB': 'VIRP.PA', 'VU': 'VU.PA', 'ROBF': 'RBT.PA', 'BVI': 'BVI.PA', 'ISOS': 'IPS.PA', 'PUBP': 'PUB.PA', 'CBLP': 'MRN.PA', 'PERP': 'RI.PA', 'WLN': 'WLN.PA', 'AF': 'AF.PA', 'ALO': 'ALO.PA', 'ATO': 'ATO.PA', 'SESFd': 'SESG.PA'
     };
     
-    // Paiements bruts (extraits des sources [1-26])
+    // Paiements bruts (issus de Dividends_List.csv.txt) [2, 11-25]
     const RAW_PAYMENTS = [
-        // Janvier - Février 2025
-        { csv_ticker: 'DBG', Societe: 'Derichebourg', Montant: 0.13, DatePaiement: '12/02/2025', Versement: 'Annuel' },
-        // Mars 2025
-        { csv_ticker: 'GFCP', Societe: 'Gecina SA', Montant: 2.70, DatePaiement: '05/03/2025', Versement: 'Trimestriel' },
-        { csv_ticker: 'LOIM', Societe: 'Klépierre', Montant: 0.925, DatePaiement: '06/03/2025', Versement: 'Semestriel' },
-        { csv_ticker: 'ICAD', Societe: 'Icade', Montant: 1.00, DatePaiement: '06/03/2025', Versement: 'Acompte' }, // Combinaison de ICAD [2]
-        { csv_ticker: 'ICAD', Societe: 'Icade', Montant: 1.16, DatePaiement: '06/03/2025', Versement: 'Solde' }, // Combinaison de ICAD [2]
-        { csv_ticker: 'STMPA', Societe: 'STMicroelectronics', Montant: 0.09, DatePaiement: '26/03/2025', Versement: 'Trimestriel' },
+        { csv_ticker: 'TTEF', Societe: 'TotalEnergies SE', Montant: 0.79, DatePaiement: '06/01/2025', Versement: 'Trimestriel' },
         { csv_ticker: 'TTEF', Societe: 'TotalEnergies SE', Montant: 0.79, DatePaiement: '01/04/2025', Versement: 'Trimestriel' },
+        { csv_ticker: 'TTEF', Societe: 'TotalEnergies SE', Montant: 0.85, DatePaiement: '01/07/2025', Versement: 'Trimestriel' },
+        { csv_ticker: 'TTEF', Societe: 'TotalEnergies SE', Montant: 0.85, DatePaiement: '03/10/2025', Versement: 'Trimestriel' },
+        { csv_ticker: 'PRTP', Societe: 'Kering', Montant: 2.00, DatePaiement: '16/01/2025', Versement: 'Acompte' },
+        { csv_ticker: 'PRTP', Societe: 'Kering', Montant: 4.00, DatePaiement: '07/05/2025', Versement: 'Solde' },
+        { csv_ticker: 'DBG', Societe: 'Derichebourg', Montant: 0.13, DatePaiement: '12/02/2025', Versement: 'Annuel' },
+        { csv_ticker: 'HRMS', Societe: 'Hermès International', Montant: 3.50, DatePaiement: '19/02/2025', Versement: 'Acompte' },
+        { csv_ticker: 'HRMS', Societe: 'Hermès International', Montant: 12.50, DatePaiement: '07/05/2025', Versement: 'Solde' },
+        { csv_ticker: 'GFCP', Societe: 'Gecina SA', Montant: 2.70, DatePaiement: '05/03/2025', Versement: 'Trimestriel' },
+        { csv_ticker: 'GFCP', Societe: 'Gecina SA', Montant: 2.75, DatePaiement: '04/07/2025', Versement: 'Trimestriel' },
+        { csv_ticker: 'LOIM', Societe: 'Klépierre', Montant: 0.925, DatePaiement: '06/03/2025', Versement: 'Semestriel' },
+        { csv_ticker: 'LOIM', Societe: 'Klépierre', Montant: 0.925, DatePaiement: '10/07/2025', Versement: 'Semestriel' },
+        { csv_ticker: 'ICAD', Societe: 'Icade', Montant: 2.15, DatePaiement: '03/07/2025', Versement: 'Annuel' },
+        { csv_ticker: 'STMPA', Societe: 'STMicroelectronics', Montant: 0.09, DatePaiement: '26/03/2025', Versement: 'Trimestriel' },
+        { csv_ticker: 'STMPA', Societe: 'STMicroelectronics', Montant: 0.09, DatePaiement: '25/06/2025', Versement: 'Trimestriel' },
+        { csv_ticker: 'STMPA', Societe: 'STMicroelectronics', Montant: 0.09, DatePaiement: '24/09/2025', Versement: 'Trimestriel' },
+        { csv_ticker: 'STMPA', Societe: 'STMicroelectronics', Montant: 0.09, DatePaiement: '17/12/2025', Versement: 'Trimestriel' },
         { csv_ticker: 'ARGAN', Societe: 'Argan SA', Montant: 3.30, DatePaiement: '17/04/2025', Versement: 'Annuel' },
-        // Avril 2025
-        { csv_ticker: 'AIR', Societe: 'Airbus SE', Montant: 1.00, DatePaiement: '24/04/2025', Versement: 'Annuel' }, // Combinaison de AIR [4]
-        { csv_ticker: 'AIR', Societe: 'Airbus SE', Montant: 2.00, DatePaiement: '24/04/2025', Versement: 'Spécial' }, // Combinaison de AIR [4]
+        { csv_ticker: 'STDM', Societe: 'Sartorius Stedim', Montant: 0.69, DatePaiement: '04/04/2025', Versement: 'Annuel' },
+        { csv_ticker: 'AIR', Societe: 'Airbus SE', Montant: 3.00, DatePaiement: '24/04/2025', Versement: 'Annuel' },
         { csv_ticker: 'SGEF', Societe: 'Vinci', Montant: 3.70, DatePaiement: '24/04/2025', Versement: 'Annuel' },
+        { csv_ticker: 'SGEF', Societe: 'Vinci', Montant: 1.05, DatePaiement: '16/10/2025', Versement: 'Acompte' }, // Paiement le 16/10/2025 [24]
         { csv_ticker: 'STLAM', Societe: 'Stellantis NV', Montant: 0.68, DatePaiement: '05/05/2025', Versement: 'Annuel' },
-        { csv_ticker: 'LVMH', Societe: 'LVMH', Montant: 7.50, DatePaiement: '28/04/2025', Versement: 'Solde' }, // Basé sur LVMH [5]
+        { csv_ticker: 'LVMH', Societe: 'LVMH', Montant: 7.50, DatePaiement: '28/04/2025', Versement: 'Solde' },
         { csv_ticker: 'TFFP', Societe: 'TF1', Montant: 0.60, DatePaiement: '28/04/2025', Versement: 'Annuel' },
         { csv_ticker: 'ENGIE', Societe: 'Engie', Montant: 1.48, DatePaiement: '29/04/2025', Versement: 'Annuel' },
         { csv_ticker: 'IPAR', Societe: 'Interparfums', Montant: 1.15, DatePaiement: '30/04/2025', Versement: 'Annuel' },
-        // Mai 2025
         { csv_ticker: 'VCTP', Societe: 'Vicat', Montant: 2.00, DatePaiement: '02/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'OPM', Societe: 'OPmobility SE', Montant: 0.36, DatePaiement: '02/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'VIV', Societe: 'Vivendi', Montant: 0.04, DatePaiement: '02/05/2025', Versement: 'Annuel' },
@@ -62,16 +73,18 @@ function getSBF120PaymentSchedule() {
         { csv_ticker: 'AXAF', Societe: 'AXA', Montant: 2.15, DatePaiement: '07/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'OREP', Societe: "L'Oréal", Montant: 7.00, DatePaiement: '07/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'DANO', Societe: 'Danone', Montant: 2.15, DatePaiement: '07/05/2025', Versement: 'Annuel' },
-        { csv_ticker: 'ESLX', Societe: 'EssilorLuxottica', Montant: 3.95, DatePaiement: '05/06/2025', Versement: 'Annuel' }, // Date détachement 07/05 [6]
+        { csv_ticker: 'ESLX', Societe: 'EssilorLuxottica', Montant: 3.95, DatePaiement: '05/06/2025', Versement: 'Annuel' },
         { csv_ticker: 'URW', Societe: 'Unibail-Rodamco', Montant: 3.50, DatePaiement: '12/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'RENA', Societe: 'Renault', Montant: 2.20, DatePaiement: '12/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'SASY', Societe: 'Sanofi', Montant: 3.92, DatePaiement: '14/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'VIE', Societe: 'Veolia', Montant: 1.40, DatePaiement: '14/05/2025', Versement: 'Annuel' },
-        { csv_ticker: 'SCHN', Societe: 'Schneider Electric', Montant: 3.90, DatePaiement: '15/05/2025', Versement: 'Annuel' }, 
+        { csv_ticker: 'SCHN', Societe: 'Schneider Electric', Montant: 3.90, DatePaiement: '15/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'VRLA', Societe: 'Verallia', Montant: 1.70, DatePaiement: '15/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'RXL', Societe: 'Rexel', Montant: 1.20, DatePaiement: '16/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'SPIE', Societe: 'Spie', Montant: 0.75, DatePaiement: '16/05/2025', Versement: 'Annuel' },
+        { csv_ticker: 'SPIE', Societe: 'Spie', Montant: 0.30, DatePaiement: '18/09/2025', Versement: 'Acompte' }, // Paiement le 18/09/2025 [23]
         { csv_ticker: 'BNPP', Societe: 'BNP Paribas', Montant: 4.79, DatePaiement: '21/05/2025', Versement: 'Annuel' },
+        { csv_ticker: 'BNPP', Societe: 'BNP Paribas', Montant: 2.59, DatePaiement: '30/09/2025', Versement: 'Exceptionnel' },
         { csv_ticker: 'AIRP', Societe: 'Air Liquide', Montant: 3.30, DatePaiement: '21/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'JCDX', Societe: 'JC Decaux SA', Montant: 0.55, DatePaiement: '21/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'NEXS', Societe: 'Nexans SA', Montant: 2.60, DatePaiement: '21/05/2025', Versement: 'Annuel' },
@@ -79,6 +92,7 @@ function getSBF120PaymentSchedule() {
         { csv_ticker: 'COFA', Societe: 'Coface', Montant: 1.40, DatePaiement: '22/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'IMTP', Societe: 'Imerys', Montant: 1.45, DatePaiement: '22/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'TCFP', Societe: 'Thales', Montant: 2.85, DatePaiement: '22/05/2025', Versement: 'Solde' },
+        { csv_ticker: 'TCFP', Societe: 'Thales', Montant: 0.95, DatePaiement: '04/12/2025', Versement: 'Acompte' },
         { csv_ticker: 'CAPP', Societe: 'Capgemini', Montant: 3.40, DatePaiement: '22/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'TE', Societe: 'Technip Energies BV', Montant: 0.85, DatePaiement: '22/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'AM', Societe: 'Dassault Aviation', Montant: 4.72, DatePaiement: '22/05/2025', Versement: 'Annuel' },
@@ -94,16 +108,15 @@ function getSBF120PaymentSchedule() {
         { csv_ticker: 'VLOF', Societe: 'Valeo', Montant: 0.42, DatePaiement: '28/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'SOGN', Societe: 'Société Générale', Montant: 1.09, DatePaiement: '28/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'AKE', Societe: 'Arkema', Montant: 3.60, DatePaiement: '28/05/2025', Versement: 'Annuel' },
-        { csv_ticker: 'DAST', Societe: 'Dassault Systèmes', Montant: 0.26, DatePaiement: '28/05/2025', Versement: 'Annuel' },
+        { csv_ticker: 'DAST', Societe: 'Dassault Systèmes', Montant: 0.26, DatePaiement: '28/05/2025', Versement: 'Annuel' }, // CAS CRITIQUE (DSY.PA)
         { csv_ticker: 'AYV', Societe: 'Ayvens', Montant: 0.37, DatePaiement: '28/05/2025', Versement: 'Annuel' },
-        { csv_ticker: 'EXENS', Societe: 'Exosens', Montant: 0.10, DatePaiement: '30/05/2025', Versement: 'Annuel' },
-        // Juin 2025
         { csv_ticker: 'FDJU', Societe: 'FDJ United', Montant: 2.05, DatePaiement: '03/06/2025', Versement: 'Annuel' },
         { csv_ticker: 'SAF', Societe: 'Safran', Montant: 2.90, DatePaiement: '02/06/2025', Versement: 'Annuel' },
+        { csv_ticker: 'EXENS', Societe: 'Exosens', Montant: 0.10, DatePaiement: '30/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'LEGD', Societe: 'Legrand', Montant: 2.20, DatePaiement: '02/06/2025', Versement: 'Annuel' },
         { csv_ticker: 'BICP', Societe: 'Société BIC SA', Montant: 3.08, DatePaiement: '03/06/2025', Versement: 'Annuel' },
         { csv_ticker: 'TRIA', Societe: 'Trigano', Montant: 1.75, DatePaiement: '03/06/2025', Versement: 'Annuel' },
-        { csv_ticker: 'CARR', Societe: 'Carrefour', Montant: 1.15, DatePaiement: '03/06/2025', Versement: 'Annuel' }, 
+        { csv_ticker: 'CARR', Societe: 'Carrefour', Montant: 1.15, DatePaiement: '03/06/2025', Versement: 'Annuel' },
         { csv_ticker: 'ERMT', Societe: 'Eramet', Montant: 1.50, DatePaiement: '04/06/2025', Versement: 'Annuel' },
         { csv_ticker: 'ACCP', Societe: 'Accor', Montant: 1.26, DatePaiement: '04/06/2025', Versement: 'Annuel' },
         { csv_ticker: 'GETP', Societe: 'Getlink', Montant: 0.58, DatePaiement: '06/06/2025', Versement: 'Annuel' },
@@ -123,24 +136,14 @@ function getSBF120PaymentSchedule() {
         { csv_ticker: 'PLNW', Societe: 'Planisware', Montant: 0.31, DatePaiement: '26/06/2025', Versement: 'Annuel' },
         { csv_ticker: 'VIRB', Societe: 'Virbac', Montant: 1.45, DatePaiement: '26/06/2025', Versement: 'Annuel' },
         { csv_ticker: 'VU', Societe: 'Vusiongroup', Montant: 0.60, DatePaiement: '26/06/2025', Versement: 'Annuel' },
-        { csv_ticker: 'ROBF', Societe: 'Robertet', Montant: 10.00, DatePaiement: '01/07/2025', Versement: 'Annuel' }, // Date détachement 27/06 [16]
-        // Juillet 2025
+        { csv_ticker: 'ROBF', Societe: 'Robertet', Montant: 10.00, DatePaiement: '01/07/2025', Versement: 'Annuel' },
         { csv_ticker: 'BVI', Societe: 'Bureau Veritas', Montant: 0.90, DatePaiement: '03/07/2025', Versement: 'Annuel' },
         { csv_ticker: 'ISOS', Societe: 'Ipsos', Montant: 1.85, DatePaiement: '03/07/2025', Versement: 'Annuel' },
         { csv_ticker: 'PUBP', Societe: 'Publicis', Montant: 3.60, DatePaiement: '03/07/2025', Versement: 'Annuel' },
         { csv_ticker: 'PERP', Societe: 'Pernod Ricard', Montant: 2.35, DatePaiement: '25/07/2025', Versement: 'Acompte' },
-        { csv_ticker: 'CBLP', Societe: 'Mersen SA', Montant: 0.90, DatePaiement: '09/07/2025', Versement: 'Annuel' },
-        // Aout - Septembre 2025
-        { csv_ticker: 'SPIE', Societe: 'Spie', Montant: 0.30, DatePaiement: '18/09/2025', Versement: 'Acompte' },
-        { csv_ticker: 'BNPP', Societe: 'BNP Paribas', Montant: 2.59, DatePaiement: '30/09/2025', Versement: 'Exceptionnel' },
-        // Octobre 2025
-        { csv_ticker: 'SGEF', Societe: 'Vinci', Montant: 1.05, DatePaiement: '16/10/2025', Versement: 'Acompte' },
-        // Novembre - Décembre 2025
         { csv_ticker: 'PERP', Societe: 'Pernod Ricard', Montant: 2.35, DatePaiement: '26/11/2025', Versement: 'Solde' },
-        { csv_ticker: 'TCFP', Societe: 'Thales', Montant: 0.95, DatePaiement: '04/12/2025', Versement: 'Acompte' },
-        { csv_ticker: 'STMPA', Societe: 'STMicroelectronics', Montant: 0.09, DatePaiement: '17/12/2025', Versement: 'Trimestriel' },
-        
-        // Tickers SBF 120 sans dividende listé :
+        { csv_ticker: 'CBLP', Societe: 'Mersen SA', Montant: 0.90, DatePaiement: '09/07/2025', Versement: 'Annuel' },
+        // Tickers SBF 120 sans dividende listé ou date explicite:
         { csv_ticker: 'WLN', Societe: 'Worldline', Montant: 0.00, DatePaiement: 'N/A', Versement: 'N/A' },
         { csv_ticker: 'AF', Societe: 'Air France - KLM', Montant: 0.00, DatePaiement: 'N/A', Versement: 'N/A' },
         { csv_ticker: 'ALO', Societe: 'Alstom', Montant: 0.00, DatePaiement: 'N/A', Versement: 'N/A' },
@@ -169,17 +172,17 @@ function getSBF120PaymentSchedule() {
 
 const SBF120_PAYMENT_SCHEDULE = getSBF120PaymentSchedule();
 
-
-// STABILISATION DE L'INITIALISATION des données
-function getInitialStockData() {
-    // Les données initiales doivent être basées sur des paiements uniques pour ne pas dupliquer au chargement
-    return [
-        SBF120_PAYMENT_SCHEDULE['TTE.PA'] ? { ...SBF120_PAYMENT_SCHEDULE['TTE.PA'], Ticker: 'TTE.PA', Quantite: 50, Statut: 'Prévu' } : null,
-        SBF120_PAYMENT_SCHEDULE['MC.PA'] ? { ...SBF120_PAYMENT_SCHEDULE['MC.PA'], Ticker: 'MC.PA', Quantite: 10, Statut: 'Versé' } : null,
-        SBF120_PAYMENT_SCHEDULE['AI.PA'] ? { ...SBF120_PAYMENT_SCHEDULE['AI.PA'], Ticker: 'AI.PA', Quantite: 25, Statut: 'Prévu' } : null,
-        SBF120_PAYMENT_SCHEDULE['DSY.PA'] ? { ...SBF120_PAYMENT_SCHEDULE['DSY.PA'], Ticker: 'DSY.PA', Quantite: 30, Statut: 'Prévu' } : null 
-    ].filter(item => item !== null);
-}
+// STABILISATION DE L'INITIALISATION des données pour ne pas planter
+const initialData = [
+    // TTE.PA - On utilise le premier paiement de la liste
+    SBF120_PAYMENT_SCHEDULE['TTE.PA'] && SBF120_PAYMENT_SCHEDULE['TTE.PA'] ? { ...SBF120_PAYMENT_SCHEDULE['TTE.PA'], Ticker: 'TTE.PA', Quantite: 50, Statut: 'Prévu' } : null,
+    // MC.PA (LVMH)
+    SBF120_PAYMENT_SCHEDULE['MC.PA'] && SBF120_PAYMENT_SCHEDULE['MC.PA'] ? { ...SBF120_PAYMENT_SCHEDULE['MC.PA'], Ticker: 'MC.PA', Quantite: 10, Statut: 'Versé' } : null,
+    // AI.PA
+    SBF120_PAYMENT_SCHEDULE['AI.PA'] && SBF120_PAYMENT_SCHEDULE['AI.PA'] ? { ...SBF120_PAYMENT_SCHEDULE['AI.PA'], Ticker: 'AI.PA', Quantite: 25, Statut: 'Prévu' } : null,
+    // DSY.PA - Cas critique pour vérification
+    SBF120_PAYMENT_SCHEDULE['DSY.PA'] && SBF120_PAYMENT_SCHEDULE['DSY.PA'] ? { ...SBF120_PAYMENT_SCHEDULE['DSY.PA'], Ticker: 'DSY.PA', Quantite: 30, Statut: 'Prévu' } : null 
+].filter(item => item !== null); 
 
 let dividendsData = [];
 
@@ -188,23 +191,18 @@ let dividendsData = [];
 function loadLocalData() {
     const storedData = localStorage.getItem(STOCK_LIST_KEY);
     if (storedData) {
-        try {
-            // Tente de charger, si JSON invalide, le catch réinitialise
-            dividendsData = JSON.parse(storedData);
-            if (!Array.isArray(dividendsData) || dividendsData.length === 0) {
-                dividendsData = getInitialStockData();
-            }
-        } catch (e) {
-            // En cas d'erreur de parsing (corruption), réinitialisation
-            dividendsData = getInitialStockData();
-        }
+        dividendsData = JSON.parse(storedData);
     } else {
-        dividendsData = getInitialStockData();
+        dividendsData = initialData;
     }
 }
 
 function saveLocalData() {
     localStorage.setItem(STOCK_LIST_KEY, JSON.stringify(dividendsData));
+}
+
+function calculateEstimatedTotal() {
+    return calculateMetrics().totalAnnuel;
 }
 
 function calculateMetrics() {
@@ -231,30 +229,29 @@ function calculateMetrics() {
     };
 }
 
-// --- LOGIQUE DE DATE (V3, corrigée et stabilisée) ---
+// --- CORRECTION CRITIQUE DE LA LOGIQUE DE DATE (Parsing sécurisé V3) ---
 function updateDividendStatusByDate() {
     // Date de référence: 19/10/2025
-    const today = new Date(2025, 9, 19, 0, 0, 0).getTime(); 
+    const today = new Date(2025, 9, 19, 0, 0, 0).getTime(); // Mois 9 = Octobre
 
     dividendsData.forEach(stock => {
         const dateStr = stock.DateVersement;
         
-        const paymentDateObj = parseDateDDMMYYYY(dateStr);
+        const paymentDate = parseDateDDMMYYYY(dateStr);
         
-        if (paymentDateObj !== null) {
-            if (paymentDateObj.getTime() <= today) { 
+        if (paymentDate !== null) {
+            // Comparaison : Si la date de paiement est AUJOURD'HUI ou dans le PASSÉ
+            if (paymentDate.getTime() <= today) { 
                 stock.Statut = 'Versé';
             } else {
                 stock.Statut = 'Prévu';
             }
-        } else {
-            stock.Statut = 'N/A';
         }
     });
 }
 
 
-// --- Logique d'Édition, Suppression, Ajout (Complète et Stable) ---
+// --- Logique d'Édition et Suppression (inchangée) ---
 
 function updateQuantity(event) {
     const index = event.target.dataset.index;
@@ -288,6 +285,8 @@ function deleteDividend(index) {
         renderDividendsTable();
     }
 }
+
+// --- Logique d'Ajout d'action SBF 120 (inchangée) ---
 
 function addNewStockSBF120() {
     const tickers = Object.keys(SBF120_PAYMENT_SCHEDULE).sort();
@@ -333,21 +332,11 @@ function addNewStockSBF120() {
     renderDividendsTable();
 }
 
-
-// --- Rendu de l'Interface (AVEC TRI ET CENTRAGE) ---
+// --- Rendu de l'Interface ---
 
 function renderDividendsTable() {
-    // 1. Mise à jour dynamique du statut
+    // 1. Mise à jour dynamique du statut AVANT le rendu
     updateDividendStatusByDate();
-
-    // 2. Tri Alphabétique (Société)
-    dividendsData.sort((a, b) => {
-        const societeA = a.Societe.toUpperCase();
-        const societeB = b.Societe.toUpperCase();
-        if (societeA < societeB) return -1;
-        if (societeA > societeB) return 1;
-        return 0;
-    });
 
     const tableBody = document.getElementById('dividendsTableBody');
     const estimatedTotalElement = document.getElementById('estimatedTotal');
@@ -374,14 +363,11 @@ function renderDividendsTable() {
         const row = tableBody.insertRow();
         const total = (parseFloat(stock.Quantite) * parseFloat(stock.MontantAction)).toFixed(2);
         
-        // Colonne 1: Société (Gauche)
         row.insertCell().textContent = stock.Societe;
-        // Colonne 2: Ticker (Gauche)
         row.insertCell().textContent = stock.Ticker;
         
-        // Colonne 3: Quantité (Centré/Édition)
+        // Quantité (Mode Édition)
         const quantityCell = row.insertCell();
-        quantityCell.classList.add('col-center'); 
         if (isEditing) {
             const input = document.createElement('input');
             input.type = 'number';
@@ -395,30 +381,14 @@ function renderDividendsTable() {
             quantityCell.textContent = stock.Quantite;
         }
         
-        // Colonne 4: Montant/action
-        row.insertCell().classList.add('col-center');
-        row.lastChild.textContent = parseFloat(stock.MontantAction).toFixed(2) + '€';
+        row.insertCell().textContent = parseFloat(stock.MontantAction).toFixed(2) + '€';
+        row.insertCell().textContent = total + '€';
+        row.insertCell().textContent = stock.Versement;
+        row.insertCell().textContent = stock.DateVersement || 'N/A';
+        row.insertCell().textContent = stock.Statut; 
         
-        // Colonne 5: Total estimé
-        row.insertCell().classList.add('col-center');
-        row.lastChild.textContent = total + '€';
-        
-        // Colonne 6: Versement
-        row.insertCell().classList.add('col-center');
-        row.lastChild.textContent = stock.Versement;
-        
-        // Colonne 7: Date Prévue
-        row.insertCell().classList.add('col-center');
-        row.lastChild.textContent = stock.DateVersement || 'N/A';
-        
-        // Colonne 8: Statut (Centré)
-        const statutCell = row.insertCell();
-        statutCell.classList.add('col-center');
-        statutCell.textContent = stock.Statut; 
-        
-        // Colonne 9: Action (Centré)
+        // Colonne Action (Bouton Supprimer)
         const actionCell = row.insertCell();
-        actionCell.classList.add('col-center', 'action-cell');
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'X Supprimer';
         deleteButton.style.cssText = 'background-color:#f44336; color:white; border:none; cursor:pointer; padding: 5px;';
@@ -426,10 +396,12 @@ function renderDividendsTable() {
         actionCell.appendChild(deleteButton);
     });
     
-    // Mise à jour des totaux
+    // Mise à jour du Total Estimé
     if (estimatedTotalElement) {
         estimatedTotalElement.textContent = metrics.totalAnnuel + '€';
     }
+    
+    // Mise à jour du Nombre de Sociétés
     const uniqueTickers = new Set(dividendsData.map(d => d.Ticker));
     if (totalSocietiesElement) {
         totalSocietiesElement.textContent = uniqueTickers.size;
