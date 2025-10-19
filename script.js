@@ -1,4 +1,3 @@
-script.js (Correction des boutons et de l'affichage)
 // Données consolidées et vérifiées (SBF 120)
 const dividendData = [
   { societe: "TotalEnergies SE", ticker: "TTEF", quantite: 100, montant_action: 0.79, versement: "06/01/2025" }, 
