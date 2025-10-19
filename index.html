@@ -6,7 +6,7 @@
     <title>Calendrier des Dividendes SBF 120</title>
     
     <style>
-        /* Styles de base pour l'affichage et le tri */
+        /* Styles basiques pour correspondre à la structure des sources [1] */
         body { font-family: sans-serif; margin: 20px; background-color: #f4f4f9; }
         header h1 { color: #004d99; }
         #statistiques-globales { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; background: #fff; }
@@ -14,45 +14,8 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         
-        /* Style du header de tri */
-        #header-societe-sort { 
-            cursor: pointer; 
-            background-color: #d1e7ff; 
-            font-weight: bold;
-        }
-        
         #actions-utilisateur h4 { margin-top: 20px; border-bottom: 1px solid #004d99; padding-bottom: 5px; }
         button { padding: 8px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 3px;}
-        
-        /* Style du bouton Éditer dans le tableau */
-        .btn-action {
-            padding: 5px 10px;
-            background-color: #28a745;
-            font-size: 0.9em;
-        }
-
-        /* Styles de la Modale */
-        .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1000; 
-            left: 0;
-            top: 0;
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.4); 
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 90%;
-            max-width: 400px;
-            border-radius: 8px;
-        }
     </style>
 </head>
 <body>
@@ -63,7 +26,7 @@
     </header>
 
     <section id="statistiques-globales">
-        <!-- Informations globales [1] -->
+        <!-- Informations globales basées sur la source [1] -->
         <p>Versés (€): 0€</p>
         <p>Prochains (€): 0€</p>
         <p>Total annuel (€): 0€</p>
@@ -76,8 +39,7 @@
         <table>
             <thead>
                 <tr>
-                    <!-- ID CRITIQUE pour le tri -->
-                    <th id="header-societe-sort">Société</th> 
+                    <th>Société</th> 
                     <th>Ticker</th>
                     <th>Quantité</th>
                     <th>Montant/action</th>
@@ -87,49 +49,23 @@
                     <th>Action</th>
                 </tr>
             </thead>
-            <!-- ID CRITIQUE pour l'affichage -->
+            <!-- ID CORPS-DIVIDENDES INDISPENSABLE pour l'affichage JS -->
             <tbody id="corps-dividendes">
-                <!-- Les lignes seront gérées par script.js -->
+                <!-- Les lignes seront insérées par script.js -->
             </tbody>
         </table>
     </section>
 
     <section id="actions-utilisateur">
-        <!-- Section Éditer [1] -->
+        <!-- Titre Éditer [1] -->
         <h4>Éditer</h4>
         <p>Total estimé : 0€</p>
         
-        <!-- Section Ajouter une action [1] -->
+        <!-- Titre Ajouter une action [1] -->
         <h4>Ajouter une action</h4>
-        <!-- ID pour la gestion du clic dans script.js -->
+        <!-- ID pour la gestion du clic par script.js -->
         <button id="btn-ajouter-action">➕ Ajouter un nouveau titre</button>
     </section>
-
-    <!-- Modal d'ajout d'action -->
-    <div id="modal-ajout-action" class="modal">
-        <div class="modal-content">
-            <h2>Ajouter un nouveau titre</h2>
-            <form id="form-ajout-dividende">
-                <label for="input-societe">Société:</label><br>
-                <input type="text" id="input-societe" required style="width: 95%; margin-bottom: 10px;"><br>
-                
-                <label for="input-ticker">Ticker (Ex: TTEF):</label><br>
-                <input type="text" id="input-ticker" required style="width: 95%; margin-bottom: 10px;"><br>
-                
-                <label for="input-quantite">Quantité (Possédée):</label><br>
-                <input type="number" id="input-quantite" required min="1" style="width: 95%; margin-bottom: 10px;"><br>
-                
-                <label for="input-montant">Montant/action (€):</label><br>
-                <input type="number" step="0.01" id="input-montant" required min="0.01" style="width: 95%; margin-bottom: 10px;"><br>
-                
-                <label for="input-versement">Date versement (JJ/MM/AAAA):</label><br>
-                <input type="text" id="input-versement" required placeholder="Ex: 01/01/2026" style="width: 95%; margin-bottom: 20px;"><br>
-                
-                <button type="submit">Sauvegarder</button>
-                <button type="button" id="btn-fermer-modal" style="background-color: #6c757d;">Annuler</button>
-            </form>
-        </div>
-    </div>
 
     <script src="script.js"></script>
 </body>
