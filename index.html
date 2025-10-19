@@ -5,49 +5,146 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Dividendes SBF 120</title>
     <style>
-        /* Style minimal pour la lisibilité et la mise en page standard */
+        /* CSS Global */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 20px;
+            background-color: #f4f7f6; /* Fond léger */
+            color: #333;
         }
+
+        /* Conteneur principal */
+        #dividend-calendar {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h3, h4 {
+            color: #1a4f78; /* Couleur bleue institutionnelle */
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        /* Indicateurs (Métrique) */
+        .metrics div {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #fafafa;
+        }
+
+        /* Couleurs pour les totaux */
+        #estimatedTotal {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #008000; /* Vert foncé */
+        }
+        #totalVerses {
+            color: #008000; 
+            font-weight: bold;
+        }
+        #totalProchains {
+            color: #ff9800; /* Orange pour les prochains */
+            font-weight: bold;
+        }
+        #totalAnnuel {
+            color: #1a4f78;
+            font-weight: bold;
+        }
+
+        /* Tableau */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 20px;
         }
         th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
+            border: 1px solid #cfcfcf;
+            padding: 10px;
             text-align: left;
-            font-size: 14px;
+            font-size: 0.9em;
         }
-        #estimatedTotal {
-            font-weight: bold;
-            color: green;
+        th {
+            background-color: #1a4f78;
+            color: white;
+            font-weight: 600;
         }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Input Quantité */
         input[type="number"] {
             width: 60px;
             text-align: right;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
         }
+
+        /* Boutons d'action */
         button {
-            padding: 8px 12px;
+            padding: 10px 15px;
             margin-right: 10px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        #editButton {
+            background-color: #ff9800; /* Orange pour l'édition/sauvegarde */
+            color: white;
+        }
+        #editButton:hover {
+            background-color: #e68900;
+        }
+
+        #addButton {
+            background-color: #4CAF50; /* Vert pour l'ajout */
+            color: white;
+        }
+        #addButton:hover {
+            background-color: #45a049;
+        }
+        
+        /* Bouton Supprimer dans le tableau (défini dans script.js mais stylé ici) */
+        .action-cell button {
+            background-color: #f44336 !important;
+            padding: 5px 8px;
+            font-size: 0.8em;
+        }
+        .action-cell button:hover {
+            background-color: #da190b !important;
+        }
+
+        /* Statut (optionnel, si vous voulez colorer le texte du statut) */
+        .statut-Verse {
+            color: #008000;
+            font-weight: bold;
+        }
+        .statut-Prevu {
+            color: #ff9800;
         }
     </style>
 </head>
 <body>
 
 <section id="dividend-calendar">
-    <h3>📅 Calendrier des Dividendes</h3>
+    <h3>📅 Gestion des Dividendes SBF 120</h3>
     
-    <!-- Zone des métriques (Correspondant à la source [1]) -->
-    <div>
+    <div class="metrics">
         Versés (€): <span id="totalVerses">0€</span> | Prochains (€): <span id="totalProchains">0€</span> | Total annuel (€): <span id="totalAnnuel">0€</span> | Sociétés: <span id="totalSocieties">0</span>
     </div>
 
     <hr>
-    <!-- Total estimé global -->
     <h4>Total estimé : <span id="estimatedTotal">0€</span></h4>
     
     <button id="editButton">Éditer</button>
@@ -59,8 +156,8 @@
                 <th>Société</th>
                 <th>Ticker</th>
                 <th>Quantité</th>
-                <th>Montant/action (Dividende)</th> 
-                <th>Total estimé (Dividendes)</th>
+                <th>Montant/action</th> 
+                <th>Total estimé</th>
                 <th>Versement</th>
                 <th>Date Prévue</th> 
                 <th>Statut</th>
@@ -72,7 +169,7 @@
         </tbody>
     </table>
     
-    <div>Données sauvegardées localement</div>
+    <div style="margin-top: 20px; font-size: 0.8em; color: #777;">Données sauvegardées localement</div>
 </section>
 
 <script src="script.js"></script>
