@@ -1,18 +1,18 @@
 // Données consolidées et vérifiées (SBF 120)
 const dividendData = [
-  { societe: "TotalEnergies SE", ticker: "TTEF", quantite: 100, montant_action: 0.79, versement: "06/01/2025" },
-  { societe: "Kering", ticker: "PRTP", quantite: 50, montant_action: 2.00, versement: "16/01/2025" },
-  { societe: "Air Liquide", ticker: "AIRP", quantite: 200, montant_action: 3.30, versement: "21/05/2025" },
-  { societe: "Danone", ticker: "DANO", quantite: 80, montant_action: 2.15, versement: "07/05/2025" },
-  { societe: "BNP Paribas", ticker: "BNPP", quantite: 80, montant_action: 4.79, versement: "21/05/2025" },
-  { societe: "CapGemini", ticker: "CAPP", quantite: 60, montant_action: 3.40, versement: "22/05/2025" },
-  { societe: "Thales", ticker: "TCFP", quantite: 70, montant_action: 2.85, versement: "22/05/2025" },
+  { societe: "TotalEnergies SE", ticker: "TTEF", quantite: 100, montant_action: 0.79, versement: "06/01/2025" }, // [1]
+  { societe: "Kering", ticker: "PRTP", quantite: 50, montant_action: 2.00, versement: "16/01/2025" }, // [1]
+  { societe: "Air Liquide", ticker: "AIRP", quantite: 200, montant_action: 3.30, versement: "21/05/2025" }, // [3]
+  { societe: "Danone", ticker: "DANO", quantite: 80, montant_action: 2.15, versement: "07/05/2025" }, // [2]
+  { societe: "BNP Paribas", ticker: "BNPP", quantite: 80, montant_action: 4.79, versement: "21/05/2025" }, // [3]
+  { societe: "CapGemini", ticker: "CAPP", quantite: 60, montant_action: 3.40, versement: "22/05/2025" }, // [4]
+  { societe: "Thales", ticker: "TCFP", quantite: 70, montant_action: 2.85, versement: "22/05/2025" }, // [4]
 ];
 
 let estTrieAscendant = true;
 
 /**
- * Fonction de tri par nom de société (A-Z ou Z-A).
+ * Fonction de tri par nom de société.
  */
 function trierParSociete(data, asc) {
   const facteur = asc ? 1 : -1;
@@ -27,7 +27,7 @@ function afficherTableau(data) {
   const corpsTableau = document.getElementById('corps-dividendes');
   
   if (!corpsTableau) {
-    console.error("Erreur critique: L'ID 'corps-dividendes' est manquant.");
+    console.error("Erreur critique: L'ID 'corps-dividendes' est manquant dans le HTML.");
     return; 
   }
 
@@ -59,15 +59,14 @@ function handleSort() {
  * Fonction pour le bouton Ajouter une action (gestion sans alerte)
  */
 function ajouterNouveauTitre() {
-  // Ceci est la fonctionnalité d'ajout, pour l'instant un log dans la console.
-  console.log("Ajouter un nouveau titre cliqué. Prêt à implémenter la fonctionnalité.");
+  console.log("Ajouter un nouveau titre cliqué. La fonctionnalité est prête à être développée ici.");
 }
 
 /**
  * Initialisation de l'application et configuration des écouteurs.
  */
 function init() {
-  // 1. Initialisation du tri et affichage
+  // 1. Initialisation du tri et affichage du tableau
   trierParSociete(dividendData, estTrieAscendant);
   afficherTableau(dividendData);
 
@@ -77,10 +76,10 @@ function init() {
     headerSociete.style.cursor = 'pointer'; 
     headerSociete.addEventListener('click', handleSort);
   } else {
-    console.warn("Avertissement: L'ID 'header-societe-sort' non trouvé. Tri inactif.");
+    console.warn("L'ID 'header-societe-sort' non trouvé. Tri inactif.");
   }
   
-  // 3. Configuration du bouton Ajouter une action (utilise l'ID #btn-ajouter-action)
+  // 3. Configuration du bouton Ajouter une action
   const btnAjouter = document.getElementById('btn-ajouter-action');
   if (btnAjouter) {
     btnAjouter.addEventListener('click', ajouterNouveauTitre);
