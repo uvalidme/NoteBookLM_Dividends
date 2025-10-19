@@ -24,8 +24,7 @@ function trierParSociete(data, asc) {
  * Gère le clic sur le bouton Éditer dans le tableau.
  */
 function handleEditAction(ticker) {
-    console.log(`Action Éditer cliquée pour le titre: ${ticker}`);
-    // Ici sera développée la logique d'édition
+    console.log(`Action Éditer cliquée pour le titre: ${ticker}. Fonctionnalité à implémenter.`);
 }
 
 /**
@@ -34,10 +33,7 @@ function handleEditAction(ticker) {
 function afficherTableau(data) {
   const corpsTableau = document.getElementById('corps-dividendes');
   
-  if (!corpsTableau) {
-    console.error("Erreur critique: L'ID 'corps-dividendes' est manquant dans le HTML.");
-    return; 
-  }
+  if (!corpsTableau) return; // Si l'ID manque, on ne fait rien pour éviter de tout casser.
 
   corpsTableau.innerHTML = ''; 
 
@@ -51,7 +47,7 @@ function afficherTableau(data) {
     row.insertCell().textContent = item.versement;
     row.insertCell().textContent = 'Planifié'; 
 
-    // CONVERSION DU TEXTE 'Éditer' EN BOUTON
+    // CRÉATION DU VRAI BOUTON ÉDITER
     const actionCell = row.insertCell();
     const editButton = document.createElement('button');
     editButton.textContent = 'Éditer';
@@ -71,9 +67,10 @@ function handleSort() {
 }
 
 /**
- * Fonction pour le bouton Ajouter une action (Retour au log console)
+ * Fonction pour le bouton Ajouter une action
  */
 function ajouterNouveauTitre() {
+  // CONFIRMATION DE FONCTIONNEMENT DANS LA CONSOLE
   console.log("Ajouter un nouveau titre cliqué. La fonctionnalité est prête à être développée ici.");
 }
 
@@ -99,7 +96,7 @@ function init() {
   if (btnAjouter) {
     btnAjouter.addEventListener('click', ajouterNouveauTitre);
   } else {
-    console.error("Le bouton 'Ajouter une action' est manquant.");
+    console.error("Le bouton 'Ajouter une action' (ID: btn-ajouter-action) est manquant dans le HTML.");
   }
 }
 
