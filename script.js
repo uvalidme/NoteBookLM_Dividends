@@ -1,12 +1,12 @@
 // Données consolidées et vérifiées (SBF 120)
 const dividendData = [
-  { societe: "TotalEnergies SE", ticker: "TTEF", quantite: 100, montant_action: 0.79, versement: "06/01/2025" }, // [2, 3]
-  { societe: "Kering", ticker: "PRTP", quantite: 50, montant_action: 2.00, versement: "16/01/2025" }, // [2, 3]
-  { societe: "Air Liquide", ticker: "AIRP", quantite: 200, montant_action: 3.30, versement: "21/05/2025" }, // [3, 4]
-  { societe: "Danone", ticker: "DANO", quantite: 80, montant_action: 2.15, versement: "07/05/2025" }, // [3, 5]
-  { societe: "BNP Paribas", ticker: "BNPP", quantite: 80, montant_action: 4.79, versement: "21/05/2025" }, // [3, 4]
-  { societe: "CapGemini", ticker: "CAPP", quantite: 60, montant_action: 3.40, versement: "22/05/2025" }, // [3, 6]
-  { societe: "Thales", ticker: "TCFP", quantite: 70, montant_action: 2.85, versement: "22/05/2025" }, // [3, 6]
+  { societe: "TotalEnergies SE", ticker: "TTEF", quantite: 100, montant_action: 0.79, versement: "06/01/2025" },
+  { societe: "Kering", ticker: "PRTP", quantite: 50, montant_action: 2.00, versement: "16/01/2025" },
+  { societe: "Air Liquide", ticker: "AIRP", quantite: 200, montant_action: 3.30, versement: "21/05/2025" },
+  { societe: "Danone", ticker: "DANO", quantite: 80, montant_action: 2.15, versement: "07/05/2025" },
+  { societe: "BNP Paribas", ticker: "BNPP", quantite: 80, montant_action: 4.79, versement: "21/05/2025" },
+  { societe: "CapGemini", ticker: "CAPP", quantite: 60, montant_action: 3.40, versement: "22/05/2025" },
+  { societe: "Thales", ticker: "TCFP", quantite: 70, montant_action: 2.85, versement: "22/05/2025" },
 ];
 
 let estTrieAscendant = true;
@@ -56,9 +56,10 @@ function handleSort() {
 }
 
 /**
- * Fonction pour le bouton Ajouter une action (placeholder)
+ * Fonction pour le bouton Ajouter une action (gestion sans alerte)
  */
 function ajouterNouveauTitre() {
+  // Ceci est la fonctionnalité d'ajout, pour l'instant un log dans la console.
   console.log("Ajouter un nouveau titre cliqué. Prêt à implémenter la fonctionnalité.");
 }
 
@@ -79,7 +80,7 @@ function init() {
     console.warn("Avertissement: L'ID 'header-societe-sort' non trouvé. Tri inactif.");
   }
   
-  // 3. Configuration du bouton Ajouter une action
+  // 3. Configuration du bouton Ajouter une action (utilise l'ID #btn-ajouter-action)
   const btnAjouter = document.getElementById('btn-ajouter-action');
   if (btnAjouter) {
     btnAjouter.addEventListener('click', ajouterNouveauTitre);
@@ -87,4 +88,3 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
-Start typing...
