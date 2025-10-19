@@ -1,213 +1,118 @@
 // script.js
 
-// Définition du portefeuille utilisateur
-let portefeuilleUtilisateur = [
-    { "Ticker": "TTE.PA", "Quantite": 100 },
-    { "Ticker": "SAN.PA", "Quantite": 50 },
-    { "Ticker": "SW.PA", "Quantite": 20 }, 
-    { "Ticker": "CS.PA", "Quantite": 40 }, 
-    { "Ticker": "AC.PA", "Quantite": 30 } 
+const STOCK_LIST_KEY = 'dividendsDataList';
+let isEditing = false;
+
+// 1. Initialisation des données (avec quelques exemples basés sur le SBF 120)
+// Utilisation d'un format simple Société, Ticker, Montant Dividende (basé sur [2-4])
+const initialData = [
+    { Societe: 'TOTALENERGIES', Ticker: 'TTE.PA', Quantite: 50, MontantAction: 3.34, Versement: 'Trimestriel', Statut: 'Prévu' }, 
+    { Societe: 'LVMH', Ticker: 'MC.PA', Quantite: 10, MontantAction: 13.00, Versement: 'Annuel', Statut: 'Versé' },
+    { Societe: 'AIR LIQUIDE', Ticker: 'AI.PA', Quantite: 25, MontantAction: 3.30, Versement: 'Annuel', Statut: 'Prévu' }
 ];
 
-// --- RÉCUPÉRATION ASYNCHRONE DES COURS (MAJ pour utiliser le backend /api/get-quotes) ---
-async function fetchCoursActuels(tickers) {
-    try {
-        // --- BLOC DE SIMULATION SUPPRIMÉ / REMPLACÉ PAR FETCH ---
-        // Appel au point de terminaison Serverless (Serverless Function sur Vercel)
-        const response = await fetch('/api/get-quotes', {
-             method: 'POST',
-             headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify({ tickers: tickers }) 
-        });
-        
-        if (!response.ok) {
-            // Log si l'appel API échoue (ex: erreur 500 sur le serveur)
-            throw new Error(`Erreur HTTP ${response.status} lors de la récupération des cours.`);
-        }
-        
-        // Retourne le JSON des prix envoyés par get-quotes.js
-        return await response.json();
-        
-    } catch (e) {
-        console.error("Erreur critique de communication avec le backend. Affichage par défaut (10.0 €):", e);
-        
-        // Fallback: Retourne des valeurs par défaut si le backend échoue complètement
-        return simulerCoursLocaux(tickers);
-    }
-}
+let dividendsData = [];
 
-// Fonction de simulation locale (Conservée uniquement comme mécanisme de repli)
-function simulerCoursLocaux(tickers) {
-    // Si l'API échoue, nous retournons au mode manuel avec les derniers prix connus
-    const simulateur = {
-        "TTE.PA": 55.00,
-        "SAN.PA": 86.50,
-        "SW.PA": 90.00,
-        "AC.PA": 41.57, 
-        "CS.PA": 39.41, 
-        // ... Ajouter les autres prix ici si vous voulez un fallback précis ...
-    };
-    
-    const fallbackQuotes = {};
-    tickers.forEach(t => {
-        fallbackQuotes[t] = simulateur[t] || 10.0; 
-    });
-    return fallbackQuotes;
-}
+// --- Fonctions de Persistance et Calcul ---
 
-
-// --- FONCTIONS D'ACTION UTILISATEUR (Aucun changement dans cette section) ---
-
-function ajouterAction() {
-    let tickerAAjouter = prompt("Entrez le Ticker de l'action SBF 120 à ajouter :").trim().toUpperCase();
-    
-    if (!tickerAAjouter) return; 
-
-    const actionStatique = DATA_SBF120.find(a => a.Ticker === tickerAAjouter);
-
-    if (!actionStatique) {
-        alert(`Ticker '${tickerAAjouter}' non trouvé dans la base SBF 120.`);
-        return;
-    }
-
-    const quantiteStr = prompt(`Combien d'actions ${tickerAAjouter} détenez-vous ?`);
-    const quantite = parseInt(quantiteStr, 10);
-
-    if (isNaN(quantite) || quantite <= 0) {
-        alert("Quantité invalide. Annulation.");
-        return;
-    }
-    
-    const indexExistant = portefeuilleUtilisateur.findIndex(a => a.Ticker === tickerAAjouter);
-    
-    if (indexExistant !== -1) {
-        portefeuilleUtilisateur[indexExistant].Quantite += quantite;
+function loadLocalData() {
+    const storedData = localStorage.getItem(STOCK_LIST_KEY);
+    if (storedData) {
+        dividendsData = JSON.parse(storedData);
     } else {
-        portefeuilleUtilisateur.push({ Ticker: tickerAAjouter, Quantite: quantite });
+        dividendsData = initialData;
     }
-
-    rafraichirAffichageTracker();
-    alert(`${quantite} actions de ${actionStatique.Societe} (${tickerAAjouter}) ajoutées!`);
 }
 
-function supprimerAction(ticker) {
-    portefeuilleUtilisateur = portefeuilleUtilisateur.filter(action => action.Ticker !== ticker);
-    rafraichirAffichageTracker();
+function saveLocalData() {
+    localStorage.setItem(STOCK_LIST_KEY, JSON.stringify(dividendsData));
 }
 
-function editerAction() {
-    alert("Fonctionnalité d'édition simulée.");
+function calculateEstimatedTotal() {
+    return dividendsData.reduce((total, stock) => {
+        // Assure que Quantite et MontantAction sont traités comme des nombres
+        const totalAction = (parseFloat(stock.Quantite) || 0) * (parseFloat(stock.MontantAction) || 0);
+        return total + totalAction;
+    }, 0).toFixed(2);
 }
 
+// --- Logique d'Édition ---
 
-// --- FONCTION DE RAFRAÎCHISSEMENT ET DE CALCUL (ASYNCHRONE) ---
-
-async function rafraichirAffichageTracker() {
-    // 1. Liste des Tickers à rafraîchir
-    const tickersToFetch = portefeuilleUtilisateur.map(p => p.Ticker);
-
-    // 2. Récupérer les cours actuels via l'API (maintenant le backend /api/get-quotes.js)
-    const coursActuels = await fetchCoursActuels(tickersToFetch);
-
-    // 3. Filtrer et enrichir les données
-    const dataAAfficher = DATA_SBF120
-        .filter(sbf => portefeuilleUtilisateur.some(p => p.Ticker === sbf.Ticker))
-        .map(actionSBF => {
-            const portefeuilleInfo = portefeuilleUtilisateur.find(p => p.Ticker === actionSBF.Ticker);
-            
-            let action = { ...actionSBF };
-            action.Quantite = portefeuilleInfo.Quantite;
-            
-            // UTILISE LE COURS RÉCUPÉRÉ DU BACKEND
-            const cours_actuel = coursActuels[action.Ticker] || 0; 
-            action.Cours_Actuel = cours_actuel;
-            
-            let rendement_actuel = 0;
-            if (action.Dividende_Fixe > 0 && cours_actuel > 0) {
-                rendement_actuel = (action.Dividende_Fixe / cours_actuel) * 100;
-            }
-            action.Rendement_Actuel = parseFloat(rendement_actuel.toFixed(2));
-
-            action.Versement = action.Frequence > 0 ? "2024-XX-XX" : "N/A";
-            action.Statut = action.Frequence > 0 ? "Prévu" : "N/A";
-            
-            return action;
-        });
-
-    window.DONNEES_TRACKER_ACTUALISEES = dataAAfficher;
+function updateQuantity(event) {
+    const index = event.target.dataset.index;
+    const newQuantity = parseInt(event.target.value, 10);
     
-    peuplerTableau(dataAAfficher); 
+    if (!isNaN(newQuantity) && newQuantity >= 0) {
+        dividendsData[index].Quantite = newQuantity;
+        // Mettre à jour immédiatement l'affichage pour refléter les totaux
+        renderDividendsTable(); 
+    }
 }
 
-function peuplerTableau(data) {
-    const tbody = document.querySelector('#trackerTable tbody');
-    tbody.innerHTML = '';
-    let totalValeurMarche = 0;
-    let totalSocietes = 0;
-
-    data.forEach(action => {
-        const row = tbody.insertRow();
-        const historique = `${action.Ininterruption}/${action.Croissance}`;
-        totalSocietes++;
-
-        const valeurAction = action.Cours_Actuel * action.Quantite;
-        totalValeurMarche += valeurAction;
-
-        const classZero = (action.Dividende_Fixe === 0) ? 'zero-dividend' : '';
-        
-        row.insertCell().textContent = action.Societe;
-        row.insertCell().textContent = action.Ticker;
-        row.insertCell().innerHTML = `<span class="dynamic ${classZero}">${action.Cours_Actuel.toFixed(2)} €</span>`;
-        row.insertCell().textContent = `${action.Dividende_Fixe.toFixed(2)} €`;
-        row.insertCell().innerHTML = `<span class="dynamic ${classZero}">${action.Rendement_Actuel.toFixed(2)} %</span>`;
-        row.insertCell().textContent = `${action.Payout_Ratio.toFixed(2)} %`;
-        row.insertCell().textContent = historique;
-        row.insertCell().textContent = action.Frequence > 0 ? `${action.Frequence}x/an` : 'N/A';
-        
-        row.insertCell().textContent = action.Quantite;
-        row.insertCell().textContent = action.Versement;
-        row.insertCell().textContent = action.Statut;
-        row.insertCell().innerHTML = `<button onclick="supprimerAction('${action.Ticker}')">X</button>`;
-    });
-
-    document.getElementById('societes').textContent = totalSocietes;
-    document.getElementById('total_estime_marche').textContent = `${totalValeurMarche.toFixed(2)} €`;
-}
-
-
-// --- GESTION DU TRI ---
-
-function sortTable(key) {
-    if (!window.DONNEES_TRACKER_ACTUALISEES) return;
+function toggleEditMode() {
+    isEditing = !isEditing;
+    const editButton = document.getElementById('editButton');
     
-    const sortedData = [...window.DONNEES_TRACKER_ACTUALISEES].sort((a, b) => {
-        const keyMap = {
-            'cours': 'Cours_Actuel',
-            'rendement': 'Rendement_Actuel' 
-        };
-        
-        const actualKey = keyMap[key] || key.charAt(0).toUpperCase() + key.slice(1);
-        
-        const keyA = a[actualKey];
-        const keyB = b[actualKey];
+    if (isEditing) {
+        editButton.textContent = 'Sauvegarder';
+    } else {
+        saveLocalData();
+        editButton.textContent = 'Éditer';
+        console.log("Données sauvegardées localement.");
+    }
+    
+    renderDividendsTable(); 
+}
 
-        if (typeof keyA === 'number' && typeof keyB === 'number') {
-            return keyB - keyA;
+// --- Rendu de l'Interface ---
+
+function renderDividendsTable() {
+    const tableBody = document.getElementById('dividendsTableBody');
+    const estimatedTotalElement = document.getElementById('estimatedTotal');
+    
+    tableBody.innerHTML = '';
+    
+    dividendsData.forEach((stock, index) => {
+        const row = tableBody.insertRow();
+        const total = (stock.Quantite * stock.MontantAction).toFixed(2);
+        
+        row.insertCell().textContent = stock.Societe;
+        row.insertCell().textContent = stock.Ticker;
+        
+        // CELLULE QUANTITÉ (Gestion de l'édition)
+        const quantityCell = row.insertCell();
+        if (isEditing) {
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.value = stock.Quantite;
+            input.min = 0;
+            input.dataset.index = index; // Liaison avec l'index dans le tableau de données
+            input.addEventListener('change', updateQuantity); 
+            quantityCell.appendChild(input);
+        } else {
+            quantityCell.textContent = stock.Quantite;
         }
-        return 0;
+        
+        row.insertCell().textContent = stock.MontantAction.toFixed(2) + '€';
+        row.insertCell().textContent = total + '€';
+        row.insertCell().textContent = stock.Versement;
+        row.insertCell().textContent = stock.Statut;
+        
+        // Colonne Action (laisser vide pour l'instant)
+        row.insertCell().textContent = '';
     });
-    peuplerTableau(sortedData);
+    
+    estimatedTotalElement.textContent = calculateEstimatedTotal() + '€';
 }
 
-// --- INITIALISATION ---
-
+// --- Démarrage de l'application ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Appel de la fonction de rafraîchissement asynchrone
-    rafraichirAffichageTracker(); 
-
-    document.querySelectorAll('.sortable').forEach(header => {
-        header.addEventListener('click', () => {
-            sortTable(header.getAttribute('data-sort'));
-        });
-    });
+    loadLocalData();
+    renderDividendsTable();
+    
+    // Attacher l'écouteur d'événement au bouton Éditer
+    document.getElementById('editButton').addEventListener('click', toggleEditMode);
+    
+    // Évite la simulation pour l'édition de quantité.
+    console.log("Interface de gestion des dividendes chargée.");
 });
