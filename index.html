@@ -4,20 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendrier des Dividendes SBF 120</title>
-    <!-- CSS: Remettez ici votre feuille de style principale (style.css, etc.) -->
+    
+    <!-- Restauration des styles et structure pour la lisibilité -->
     <style>
-        /* Styles minimalistes pour l'affichage des éléments des sources */
-        body { font-family: sans-serif; margin: 20px; }
-        header h1 { color: #333; }
-        #statistiques-globales p { display: inline-block; margin-right: 15px; border: 1px solid #ccc; padding: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f9; }
+        header h1 { color: #004d99; }
+        #statistiques-globales { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; background: #fff; }
+        #statistiques-globales p { display: inline-block; margin-right: 20px; font-size: 1.1em; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         
-        /* ID critique pour le tri */
+        /* Style critique pour indiquer que l'en-tête est cliquable */
         #header-societe-sort { 
             cursor: pointer; 
-            background-color: #e0e0e0; /* Met en évidence la colonne cliquable */
+            background-color: #d1e7ff; 
+            font-weight: bold;
         }
+        
+        #actions-utilisateur h4 { margin-top: 20px; border-bottom: 1px solid #004d99; padding-bottom: 5px; }
+        button { padding: 8px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -28,7 +33,7 @@
     </header>
 
     <section id="statistiques-globales">
-        <!-- Informations globales tirées de la source [1] -->
+        <!-- Informations globales [1] -->
         <p>Versés (€): 0€</p>
         <p>Prochains (€): 0€</p>
         <p>Total annuel (€): 0€</p>
@@ -37,11 +42,11 @@
     </section>
 
     <section id="tableau-dividendes">
-        <h2>Détail des Postes (Triable)</h2>
+        <h2>Détail des Postes</h2>
         <table>
             <thead>
                 <tr>
-                    <!-- ID CRITIQUE: Utilisé par script.js pour le tri -->
+                    <!-- ID CRITIQUE pour le tri par script.js -->
                     <th id="header-societe-sort">Société</th> 
                     <th>Ticker</th>
                     <th>Quantité</th>
@@ -52,21 +57,22 @@
                     <th>Action</th>
                 </tr>
             </thead>
-            <!-- ID CRITIQUE: Utilisé par script.js pour insérer les données -->
+            <!-- ID CRITIQUE pour l'affichage des données par script.js -->
             <tbody id="corps-dividendes">
-                <!-- Les lignes de dividendes seront insérées et gérées ici par JS -->
+                <!-- Les lignes seront insérées ici. -->
             </tbody>
         </table>
     </section>
 
     <section id="actions-utilisateur">
-        <!-- Bouton Éditer [1] -->
-        <h3>Éditer</h3>
+        <!-- Section ÉDITER [1] -->
+        <h4>Éditer</h4>
         <p>Total estimé : 0€</p>
         
-        <!-- Bouton Ajouter une action [1] -->
-        <h3>Ajouter une action</h3>
-        <button onclick="console.log('Ajouter action cliqué')">➕ Ajouter un nouveau titre</button>
+        <!-- Section AJOUTER UNE ACTION [1] -->
+        <h4>Ajouter une action</h4>
+        <!-- Simulation d'un bouton pour "Ajouter une action" -->
+        <button onclick="alert('Fonctionnalité d\'ajout à développer.')">➕ Ajouter un nouveau titre</button>
     </section>
 
     <script src="script.js"></script>
