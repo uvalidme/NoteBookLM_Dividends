@@ -4,36 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendrier des Dividendes SBF 120</title>
-    
-    <!-- Restauration des styles et structure pour la lisibilité -->
+    <!-- Placez ici le lien vers votre CSS habituel ou vos styles intégrés -->
     <style>
+        /* Styles de base pour restauration visuelle */
         body { font-family: sans-serif; margin: 20px; background-color: #f4f4f9; }
         header h1 { color: #004d99; }
-        #statistiques-globales { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; background: #fff; }
-        #statistiques-globales p { display: inline-block; margin-right: 20px; font-size: 1.1em; }
+        #statistiques-globales p { display: inline-block; margin-right: 20px; border: 1px solid #ccc; padding: 5px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        
-        /* Style critique pour indiquer que l'en-tête est cliquable */
-        #header-societe-sort { 
-            cursor: pointer; 
-            background-color: #d1e7ff; 
-            font-weight: bold;
-        }
-        
-        #actions-utilisateur h4 { margin-top: 20px; border-bottom: 1px solid #004d99; padding-bottom: 5px; }
-        button { padding: 8px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>📅 Calendrier des Dividendes</h1>
-        <p>⏳ Chargement...</p>
+        <p>⏳ Chargement...</p> 
     </header>
 
     <section id="statistiques-globales">
-        <!-- Informations globales [1] -->
+        <!-- Correspondance des informations tirées de la source [1] -->
         <p>Versés (€): 0€</p>
         <p>Prochains (€): 0€</p>
         <p>Total annuel (€): 0€</p>
@@ -46,8 +35,8 @@
         <table>
             <thead>
                 <tr>
-                    <!-- ID CRITIQUE pour le tri par script.js -->
-                    <th id="header-societe-sort">Société</th> 
+                    <!-- Suppression de l'ID de tri -->
+                    <th>Société</th> 
                     <th>Ticker</th>
                     <th>Quantité</th>
                     <th>Montant/action</th>
@@ -57,22 +46,21 @@
                     <th>Action</th>
                 </tr>
             </thead>
-            <!-- ID CRITIQUE pour l'affichage des données par script.js -->
-            <tbody id="corps-dividendes">
-                <!-- Les lignes seront insérées ici. -->
+            <!-- Le corps du tableau (sans ID corps-dividendes si votre ancien script n'en utilisait pas) -->
+            <tbody>
+                <!-- Les lignes de dividendes seront insérées ici. -->
             </tbody>
         </table>
     </section>
 
     <section id="actions-utilisateur">
-        <!-- Section ÉDITER [1] -->
+        <!-- Restauration des titres d'actions [1] -->
         <h4>Éditer</h4>
         <p>Total estimé : 0€</p>
         
-        <!-- Section AJOUTER UNE ACTION [1] -->
         <h4>Ajouter une action</h4>
-        <!-- Simulation d'un bouton pour "Ajouter une action" -->
-        <button onclick="alert('Fonctionnalité d\'ajout à développer.')">➕ Ajouter un nouveau titre</button>
+        <!-- Remplacement du bouton d'alerte par un bouton standard -->
+        <button id="btn-ajouter-action">➕ Ajouter un nouveau titre</button>
     </section>
 
     <script src="script.js"></script>
