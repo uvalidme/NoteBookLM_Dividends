@@ -6,7 +6,7 @@
     <title>Calendrier des Dividendes SBF 120</title>
     
     <style>
-        /* Styles de base pour restauration visuelle et indication de la colonne de tri */
+        /* Styles de base pour l'affichage et le tri */
         body { font-family: sans-serif; margin: 20px; background-color: #f4f4f9; }
         header h1 { color: #004d99; }
         #statistiques-globales { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; background: #fff; }
@@ -14,7 +14,7 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         
-        /* Style du header de tri */
+        /* Style critique pour l'en-tête de tri */
         #header-societe-sort { 
             cursor: pointer; 
             background-color: #d1e7ff; 
@@ -45,7 +45,7 @@
         <table>
             <thead>
                 <tr>
-                    <!-- ID CRITIQUE pour le tri -->
+                    <!-- ID CRITIQUE pour le tri (Cliquable) -->
                     <th id="header-societe-sort">Société</th> 
                     <th>Ticker</th>
                     <th>Quantité</th>
@@ -56,7 +56,7 @@
                     <th>Action</th>
                 </tr>
             </thead>
-            <!-- ID CRITIQUE pour l'affichage -->
+            <!-- ID CRITIQUE pour l'affichage (tbody) -->
             <tbody id="corps-dividendes">
                 <!-- Les lignes seront gérées par script.js -->
             </tbody>
@@ -70,7 +70,7 @@
         
         <!-- Section Ajouter une action -->
         <h4>Ajouter une action</h4>
-        <!-- ID pour la gestion du clic par script.js -->
+        <!-- ID pour la gestion du clic dans script.js -->
         <button id="btn-ajouter-action">➕ Ajouter un nouveau titre</button>
     </section>
 
