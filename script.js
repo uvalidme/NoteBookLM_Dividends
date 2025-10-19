@@ -1,3 +1,4 @@
+script.js (Correction des boutons et de l'affichage)
 // Données consolidées et vérifiées (SBF 120)
 const dividendData = [
   { societe: "TotalEnergies SE", ticker: "TTEF", quantite: 100, montant_action: 0.79, versement: "06/01/2025" }, 
@@ -18,6 +19,14 @@ function trierParSociete(data, asc) {
   const facteur = asc ? 1 : -1;
   data.sort((a, b) => a.societe.localeCompare(b.societe) * facteur);
   return data;
+}
+
+/**
+ * Gère le clic sur le bouton Éditer dans le tableau.
+ */
+function handleEditAction(ticker) {
+    console.log(`Action Éditer cliquée pour le titre: ${ticker}`);
+    // Ici sera développée la logique d'édition
 }
 
 /**
@@ -42,7 +51,14 @@ function afficherTableau(data) {
     row.insertCell().textContent = (item.quantite * item.montant_action).toFixed(2) + ' €';
     row.insertCell().textContent = item.versement;
     row.insertCell().textContent = 'Planifié'; 
-    row.insertCell().textContent = 'Éditer'; 
+
+    // CONVERSION DU TEXTE 'Éditer' EN BOUTON
+    const actionCell = row.insertCell();
+    const editButton = document.createElement('button');
+    editButton.textContent = 'Éditer';
+    editButton.classList.add('btn-action');
+    editButton.addEventListener('click', () => handleEditAction(item.ticker));
+    actionCell.appendChild(editButton);
   });
 }
 
@@ -56,11 +72,10 @@ function handleSort() {
 }
 
 /**
- * Fonction pour le bouton Ajouter une action (Alerte pour preuve visuelle)
+ * Fonction pour le bouton Ajouter une action (Retour au log console)
  */
 function ajouterNouveauTitre() {
-  // ALERTE POUR PROUVER QUE LE BOUTON EST CONNECTÉ
-  alert("Le bouton Ajouter un titre fonctionne ! La fonctionnalité réelle sera développée à la prochaine étape.");
+  console.log("Ajouter un nouveau titre cliqué. La fonctionnalité est prête à être développée ici.");
 }
 
 /**
@@ -85,8 +100,7 @@ function init() {
   if (btnAjouter) {
     btnAjouter.addEventListener('click', ajouterNouveauTitre);
   } else {
-    // Si ce message apparaît dans la console, le problème est dans votre index.html
-    console.error("Le bouton 'Ajouter une action' (ID: btn-ajouter-action) est manquant. Événement non attaché.");
+    console.error("Le bouton 'Ajouter une action' est manquant.");
   }
 }
 
