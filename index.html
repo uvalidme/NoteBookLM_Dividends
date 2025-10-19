@@ -30,6 +30,29 @@
             background-color: #28a745;
             font-size: 0.9em;
         }
+
+        /* Styles de la Modale */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.4); 
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -40,6 +63,7 @@
     </header>
 
     <section id="statistiques-globales">
+        <!-- Informations globales [1] -->
         <p>Versés (€): 0€</p>
         <p>Prochains (€): 0€</p>
         <p>Total annuel (€): 0€</p>
@@ -71,15 +95,41 @@
     </section>
 
     <section id="actions-utilisateur">
-        <!-- Titre Éditer -->
+        <!-- Section Éditer [1] -->
         <h4>Éditer</h4>
         <p>Total estimé : 0€</p>
         
-        <!-- Section Ajouter une action -->
+        <!-- Section Ajouter une action [1] -->
         <h4>Ajouter une action</h4>
         <!-- ID pour la gestion du clic dans script.js -->
         <button id="btn-ajouter-action">➕ Ajouter un nouveau titre</button>
     </section>
+
+    <!-- Modal d'ajout d'action -->
+    <div id="modal-ajout-action" class="modal">
+        <div class="modal-content">
+            <h2>Ajouter un nouveau titre</h2>
+            <form id="form-ajout-dividende">
+                <label for="input-societe">Société:</label><br>
+                <input type="text" id="input-societe" required style="width: 95%; margin-bottom: 10px;"><br>
+                
+                <label for="input-ticker">Ticker (Ex: TTEF):</label><br>
+                <input type="text" id="input-ticker" required style="width: 95%; margin-bottom: 10px;"><br>
+                
+                <label for="input-quantite">Quantité (Possédée):</label><br>
+                <input type="number" id="input-quantite" required min="1" style="width: 95%; margin-bottom: 10px;"><br>
+                
+                <label for="input-montant">Montant/action (€):</label><br>
+                <input type="number" step="0.01" id="input-montant" required min="0.01" style="width: 95%; margin-bottom: 10px;"><br>
+                
+                <label for="input-versement">Date versement (JJ/MM/AAAA):</label><br>
+                <input type="text" id="input-versement" required placeholder="Ex: 01/01/2026" style="width: 95%; margin-bottom: 20px;"><br>
+                
+                <button type="submit">Sauvegarder</button>
+                <button type="button" id="btn-fermer-modal" style="background-color: #6c757d;">Annuler</button>
+            </form>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
