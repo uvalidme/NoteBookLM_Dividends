@@ -1,36 +1,38 @@
-// script.js
+// script.js qui fonctionne avant modif du 19/10/25 - 23:31
 
 const STOCK_LIST_KEY = 'dividendsDataList';
 let isEditing = false;
 
-// --- UTILITIES: Date Parsing Sécurisé ---
+// --- MAPPING INTERNE DES PAIEMENTS SBF 120 (Sources) ---
+
 // Fonction de parsing sécurisé de JJ/MM/AAAA vers un objet Date
 function parseDateDDMMYYYY(dateStr) {
     if (!dateStr || dateStr === 'N/A') return null;
     
+    // Extraction des parties de la date
     const parts = dateStr.split('/');
+    // Assurez-vous que nous avons 3 parties
     if (parts.length !== 3) return null;
     
-    // Assurez-vous que l'ordre est bien ANNEE, MOIS - 1, JOUR
     const day = parseInt(parts, 10);
-    const month = parseInt(parts, 10) - 1; // Le mois est basé sur 0 (0 = Janvier)
-    const year = parseInt(parts, 10);
+    const month = parseInt(parts[1], 10) - 1; // Le mois est basé sur 0 (0 = Janvier)
+    const year = parseInt(parts[2], 10);
     
+    // Vérification de base pour éviter les NaN
     if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
     
-    // Fixé à la fin de la journée (23:59:59) pour la comparaison "jusqu'à la fin du jour de paiement"
-    return new Date(year, month, day, 23, 59, 59);
+    // Création sécurisée de l'objet Date (YYYY, MM, DD)
+    return new Date(year, month, day, 23, 59, 59); // Fixé à la fin de la journée pour la comparaison
 }
 
 
-// --- MAPPING INTERNE DES PAIEMENTS SBF 120 (Sources) ---
 function getSBF120PaymentSchedule() {
-    // Association des identifiants CSV aux Tickers SBF 120 réels (Sources [2-5])
+    // Association des identifiants CSV aux Tickers SBF 120 réels [3-10]
     const MAPPING = {
         'TTEF': 'TTE.PA', 'PRTP': 'KER.PA', 'DBG': 'DBG.PA', 'HRMS': 'RMS.PA', 'GFCP': 'GFC.PA', 'LOIM': 'LI.PA', 'ICAD': 'ICAD.PA', 'STMPA': 'STMPA.PA', 'ARGAN': 'ARG.PA', 'STDM': 'DIM.PA', 'AIR': 'AIR.PA', 'SGEF': 'DG.PA', 'STLAM': 'STLAP.PA', 'LVMH': 'MC.PA', 'TFFP': 'TFI.PA', 'ENGIE': 'ENGI.PA', 'IPAR': 'ITP.PA', 'VCTP': 'VCT.PA', 'OPM': 'OPM.PA', 'VIV': 'VIV.PA', 'CVO': 'COV.PA', 'SCOR': 'SCR.PA', 'MERY': 'MERY.PA', 'BOUY': 'EN.PA', 'MMTP': 'MMT.PA', 'AXAF': 'CS.PA', 'OREP': 'OR.PA', 'DANO': 'BN.PA', 'ESLX': 'EL.PA', 'URW': 'URW.PA', 'RENA': 'RNO.PA', 'SASY': 'SAN.PA', 'VIE': 'VIE.PA', 'SCHN': 'SU.PA', 'VRLA': 'VRLA.PA', 'RXL': 'RXL.PA', 'SPIE': 'SPIE.PA', 'BNPP': 'BNP.PA', 'AIRP': 'AI.PA', 'JCDX': 'DEC.PA', 'NEXS': 'NEX.PA', 'CARM': 'CARM.PA', 'COFA': 'COFA.PA', 'IMTP': 'NK.PA', 'TCFP': 'HO.PA', 'CAPP': 'CAP.PA', 'TE': 'TE.PA', 'AM': 'AM.PA', 'FOUG': 'FGR.PA', 'MWDP': 'MF.PA', 'MICP': 'ML.PA', 'TEPRF': 'TEP.PA', 'EURA': 'RF.PA', 'ENX': 'ENX.PA', 'CAGR': 'ACA.PA', 'ELIS': 'ELIS.PA', 'VLLP': 'VK.PA', 'VLOF': 'FR.PA', 'SOGN': 'GLE.PA', 'AKE': 'AKE.PA', 'DAST': 'DSY.PA', 'AYV': 'AYV.PA', 'FDJU': 'FDJU.PA', 'SAF': 'SAF.PA', 'EXENS': 'EXENS.PA', 'LEGD': 'LR.PA', 'BICP': 'BB.PA', 'TRIA': 'TRI.PA', 'CARR': 'CA.PA', 'ERMT': 'ERA.PA', 'ACCP': 'AC.PA', 'GETP': 'GET.PA', 'ADP': 'ADP.PA', 'SEBF': 'SK.PA', 'SOPR': 'SOP.PA', 'ORAN': 'ORA.PA', 'IPN': 'IPSEN.PA', 'SGOB': 'SGO.PA', 'BIOX': 'BIM.PA', 'BOLL': 'BOL.PA', 'AMUN': 'AMUN.PA', 'EDEN': 'EDEN.PA', 'LTEN': 'ATE.PA', 'RUBF': 'RUI.PA', 'GTT': 'GTT.PA', 'PLNW': 'PLNW.PA', 'VIRB': 'VIRP.PA', 'VU': 'VU.PA', 'ROBF': 'RBT.PA', 'BVI': 'BVI.PA', 'ISOS': 'IPS.PA', 'PUBP': 'PUB.PA', 'CBLP': 'MRN.PA', 'PERP': 'RI.PA', 'WLN': 'WLN.PA', 'AF': 'AF.PA', 'ALO': 'ALO.PA', 'ATO': 'ATO.PA', 'SESFd': 'SESG.PA'
     };
     
-    // Paiements bruts (extraits des sources [1, 5-29])
+    // Paiements bruts (issus de Dividends_List.csv.txt) [2, 11-25]
     const RAW_PAYMENTS = [
         { csv_ticker: 'TTEF', Societe: 'TotalEnergies SE', Montant: 0.79, DatePaiement: '06/01/2025', Versement: 'Trimestriel' },
         { csv_ticker: 'TTEF', Societe: 'TotalEnergies SE', Montant: 0.79, DatePaiement: '01/04/2025', Versement: 'Trimestriel' },
@@ -54,7 +56,7 @@ function getSBF120PaymentSchedule() {
         { csv_ticker: 'STDM', Societe: 'Sartorius Stedim', Montant: 0.69, DatePaiement: '04/04/2025', Versement: 'Annuel' },
         { csv_ticker: 'AIR', Societe: 'Airbus SE', Montant: 3.00, DatePaiement: '24/04/2025', Versement: 'Annuel' },
         { csv_ticker: 'SGEF', Societe: 'Vinci', Montant: 3.70, DatePaiement: '24/04/2025', Versement: 'Annuel' },
-        { csv_ticker: 'SGEF', Societe: 'Vinci', Montant: 1.05, DatePaiement: '16/10/2025', Versement: 'Acompte' },
+        { csv_ticker: 'SGEF', Societe: 'Vinci', Montant: 1.05, DatePaiement: '16/10/2025', Versement: 'Acompte' }, // Paiement le 16/10/2025 [24]
         { csv_ticker: 'STLAM', Societe: 'Stellantis NV', Montant: 0.68, DatePaiement: '05/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'LVMH', Societe: 'LVMH', Montant: 7.50, DatePaiement: '28/04/2025', Versement: 'Solde' },
         { csv_ticker: 'TFFP', Societe: 'TF1', Montant: 0.60, DatePaiement: '28/04/2025', Versement: 'Annuel' },
@@ -80,7 +82,7 @@ function getSBF120PaymentSchedule() {
         { csv_ticker: 'VRLA', Societe: 'Verallia', Montant: 1.70, DatePaiement: '15/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'RXL', Societe: 'Rexel', Montant: 1.20, DatePaiement: '16/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'SPIE', Societe: 'Spie', Montant: 0.75, DatePaiement: '16/05/2025', Versement: 'Annuel' },
-        { csv_ticker: 'SPIE', Societe: 'Spie', Montant: 0.30, DatePaiement: '18/09/2025', Versement: 'Acompte' },
+        { csv_ticker: 'SPIE', Societe: 'Spie', Montant: 0.30, DatePaiement: '18/09/2025', Versement: 'Acompte' }, // Paiement le 18/09/2025 [23]
         { csv_ticker: 'BNPP', Societe: 'BNP Paribas', Montant: 4.79, DatePaiement: '21/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'BNPP', Societe: 'BNP Paribas', Montant: 2.59, DatePaiement: '30/09/2025', Versement: 'Exceptionnel' },
         { csv_ticker: 'AIRP', Societe: 'Air Liquide', Montant: 3.30, DatePaiement: '21/05/2025', Versement: 'Annuel' },
@@ -106,7 +108,7 @@ function getSBF120PaymentSchedule() {
         { csv_ticker: 'VLOF', Societe: 'Valeo', Montant: 0.42, DatePaiement: '28/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'SOGN', Societe: 'Société Générale', Montant: 1.09, DatePaiement: '28/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'AKE', Societe: 'Arkema', Montant: 3.60, DatePaiement: '28/05/2025', Versement: 'Annuel' },
-        { csv_ticker: 'DAST', Societe: 'Dassault Systèmes', Montant: 0.26, DatePaiement: '28/05/2025', Versement: 'Annuel' }, // CAS CRITIQUE
+        { csv_ticker: 'DAST', Societe: 'Dassault Systèmes', Montant: 0.26, DatePaiement: '28/05/2025', Versement: 'Annuel' }, // CAS CRITIQUE (DSY.PA)
         { csv_ticker: 'AYV', Societe: 'Ayvens', Montant: 0.37, DatePaiement: '28/05/2025', Versement: 'Annuel' },
         { csv_ticker: 'FDJU', Societe: 'FDJ United', Montant: 2.05, DatePaiement: '03/06/2025', Versement: 'Annuel' },
         { csv_ticker: 'SAF', Societe: 'Safran', Montant: 2.90, DatePaiement: '02/06/2025', Versement: 'Annuel' },
@@ -171,17 +173,16 @@ function getSBF120PaymentSchedule() {
 const SBF120_PAYMENT_SCHEDULE = getSBF120PaymentSchedule();
 
 // STABILISATION DE L'INITIALISATION des données pour ne pas planter
-// Nous ne pouvons pas garantir que tous les paiements multiples aient été agrégés dans la source,
-// nous prendrons donc le premier élément de chaque tableau de paiement pour initialiser.
-function getInitialStockData() {
-    return [
-        SBF120_PAYMENT_SCHEDULE['TTE.PA']?. ? { ...SBF120_PAYMENT_SCHEDULE['TTE.PA'], Ticker: 'TTE.PA', Quantite: 50, Statut: 'Prévu' } : null,
-        SBF120_PAYMENT_SCHEDULE['MC.PA']?. ? { ...SBF120_PAYMENT_SCHEDULE['MC.PA'], Ticker: 'MC.PA', Quantite: 10, Statut: 'Versé' } : null,
-        SBF120_PAYMENT_SCHEDULE['AI.PA']?. ? { ...SBF120_PAYMENT_SCHEDULE['AI.PA'], Ticker: 'AI.PA', Quantite: 25, Statut: 'Prévu' } : null,
-        // DSY.PA - Cas critique de test
-        SBF120_PAYMENT_SCHEDULE['DSY.PA']?. ? { ...SBF120_PAYMENT_SCHEDULE['DSY.PA'], Ticker: 'DSY.PA', Quantite: 30, Statut: 'Prévu' } : null 
-    ].filter(item => item !== null);
-}
+const initialData = [
+    // TTE.PA - On utilise le premier paiement de la liste
+    SBF120_PAYMENT_SCHEDULE['TTE.PA'] && SBF120_PAYMENT_SCHEDULE['TTE.PA'] ? { ...SBF120_PAYMENT_SCHEDULE['TTE.PA'], Ticker: 'TTE.PA', Quantite: 50, Statut: 'Prévu' } : null,
+    // MC.PA (LVMH)
+    SBF120_PAYMENT_SCHEDULE['MC.PA'] && SBF120_PAYMENT_SCHEDULE['MC.PA'] ? { ...SBF120_PAYMENT_SCHEDULE['MC.PA'], Ticker: 'MC.PA', Quantite: 10, Statut: 'Versé' } : null,
+    // AI.PA
+    SBF120_PAYMENT_SCHEDULE['AI.PA'] && SBF120_PAYMENT_SCHEDULE['AI.PA'] ? { ...SBF120_PAYMENT_SCHEDULE['AI.PA'], Ticker: 'AI.PA', Quantite: 25, Statut: 'Prévu' } : null,
+    // DSY.PA - Cas critique pour vérification
+    SBF120_PAYMENT_SCHEDULE['DSY.PA'] && SBF120_PAYMENT_SCHEDULE['DSY.PA'] ? { ...SBF120_PAYMENT_SCHEDULE['DSY.PA'], Ticker: 'DSY.PA', Quantite: 30, Statut: 'Prévu' } : null 
+].filter(item => item !== null); 
 
 let dividendsData = [];
 
@@ -191,12 +192,8 @@ function loadLocalData() {
     const storedData = localStorage.getItem(STOCK_LIST_KEY);
     if (storedData) {
         dividendsData = JSON.parse(storedData);
-        // Vérifiez si les données sont valides
-        if (!Array.isArray(dividendsData) || dividendsData.length === 0) {
-            dividendsData = getInitialStockData();
-        }
     } else {
-        dividendsData = getInitialStockData();
+        dividendsData = initialData;
     }
 }
 
@@ -232,33 +229,29 @@ function calculateMetrics() {
     };
 }
 
-// --- LOGIQUE DE DATE CORRIGÉE (V3) ---
+// --- CORRECTION CRITIQUE DE LA LOGIQUE DE DATE (Parsing sécurisé V3) ---
 function updateDividendStatusByDate() {
     // Date de référence: 19/10/2025
-    // 2025, 9 (Octobre), 19
-    const today = new Date(2025, 9, 19, 0, 0, 0).getTime(); 
+    const today = new Date(2025, 9, 19, 0, 0, 0).getTime(); // Mois 9 = Octobre
 
     dividendsData.forEach(stock => {
         const dateStr = stock.DateVersement;
         
-        const paymentDateObj = parseDateDDMMYYYY(dateStr);
+        const paymentDate = parseDateDDMMYYYY(dateStr);
         
-        if (paymentDateObj !== null) {
+        if (paymentDate !== null) {
             // Comparaison : Si la date de paiement est AUJOURD'HUI ou dans le PASSÉ
-            if (paymentDateObj.getTime() <= today) { 
+            if (paymentDate.getTime() <= today) { 
                 stock.Statut = 'Versé';
             } else {
                 stock.Statut = 'Prévu';
             }
-        } else {
-            // Si la date est N/A, on laisse le statut initial ou 'N/A' si vous l'ajoutez plus tard
-            stock.Statut = 'N/A';
         }
     });
 }
 
 
-// --- Logique d'Édition et Suppression ---
+// --- Logique d'Édition et Suppression (inchangée) ---
 
 function updateQuantity(event) {
     const index = event.target.dataset.index;
@@ -293,7 +286,7 @@ function deleteDividend(index) {
     }
 }
 
-// --- Logique d'Ajout d'action SBF 120 ---
+// --- Logique d'Ajout d'action SBF 120 (inchangée) ---
 
 function addNewStockSBF120() {
     const tickers = Object.keys(SBF120_PAYMENT_SCHEDULE).sort();
@@ -308,11 +301,11 @@ function addNewStockSBF120() {
     const payments = SBF120_PAYMENT_SCHEDULE[tickerInput];
     
     if (!payments || payments.length === 0) {
-        alert("Ticker non valide ou aucune date de paiement trouvée pour cette société SBF 120.");
+        alert("Ticker non valide ou aucune date de paiement trouvée pour cette société SBF 120. Veuillez vérifier la casse (ex: TTE.PA).");
         return;
     }
 
-    const societyName = payments.Societe;
+    const societyName = payments.Societe; // Utilisation du premier élément pour le nom
 
     const quantityInput = prompt(`Entrez la quantité détenue pour ${societyName} (${tickerInput}) :`);
     const quantity = parseInt(quantityInput, 10);
@@ -392,10 +385,7 @@ function renderDividendsTable() {
         row.insertCell().textContent = total + '€';
         row.insertCell().textContent = stock.Versement;
         row.insertCell().textContent = stock.DateVersement || 'N/A';
-        
-        // Affichage du statut mis à jour
-        const statutCell = row.insertCell();
-        statutCell.textContent = stock.Statut; 
+        row.insertCell().textContent = stock.Statut; 
         
         // Colonne Action (Bouton Supprimer)
         const actionCell = row.insertCell();
