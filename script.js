@@ -3,132 +3,178 @@
 const STOCK_LIST_KEY = 'dividendsDataList';
 let isEditing = false;
 
-// Mappage Fréquence (basé sur les sources [2, 5-13])
-const FREQUENCY_MAP = {
-    1: 'Annuel',
-    2: 'Semestriel',
-    4: 'Trimestriel',
-    // Si la fréquence n'est pas claire, 'Annuel' est la valeur par défaut
+// --- Référence SBF 120 des ÉVÉNEMENTS DE PAIEMENT (Dividende, Date de Paiement) ---
+// Données extraites de Dividends_List.csv.txt [1-43] et mappées aux Tickers SBF 120 [44-53]
+const SBF120_PAYMENT_SCHEDULE = {
+    // Structure: Ticker: [{Societe, Montant, Date, Frequence}]
+    'TTE.PA': [
+        { Societe: 'TotalEnergies SE', Montant: 0.79, Date: '06/01/2025', Versement: 'Trimestriel' },
+        { Societe: 'TotalEnergies SE', Montant: 0.79, Date: '01/04/2025', Versement: 'Trimestriel' },
+        { Societe: 'TotalEnergies SE', Montant: 0.85, Date: '01/07/2025', Versement: 'Trimestriel' },
+        { Societe: 'TotalEnergies SE', Montant: 0.85, Date: '03/10/2025', Versement: 'Trimestriel' },
+        { Societe: 'TotalEnergies SE', Montant: 0.85, Date: '01/07/2025', Versement: 'Trimestriel' } // [1, 5, 27, 40]
+    ],
+    'KER.PA': [
+        { Societe: 'Kering', Montant: 2.00, Date: '16/01/2025', Versement: 'Acompte' },
+        { Societe: 'Kering', Montant: 4.00, Date: '07/05/2025', Versement: 'Solde' } // [1, 11]
+    ],
+    'DBG.PA': [ { Societe: 'Derichebourg', Montant: 0.13, Date: '12/02/2025', Versement: 'Annuel' } ], // [2]
+    'RMS.PA': [ 
+        { Societe: 'Hermès International', Montant: 3.50, Date: '19/02/2025', Versement: 'Acompte' }, 
+        { Societe: 'Hermès International', Montant: 12.50, Date: '07/05/2025', Versement: 'Solde' } // [3, 11]
+    ],
+    'GFC.PA': [ 
+        { Societe: 'Gecina', Montant: 2.70, Date: '05/03/2025', Versement: 'Trimestriel' },
+        { Societe: 'Gecina', Montant: 2.75, Date: '04/07/2025', Versement: 'Trimestriel' } // [4, 32]
+    ],
+    'LI.PA': [ 
+        { Societe: 'Klépierre', Montant: 0.925, Date: '06/03/2025', Versement: 'Semestriel' },
+        { Societe: 'Klépierre', Montant: 0.925, Date: '10/07/2025', Versement: 'Semestriel' } // [4, 34]
+    ],
+    'ICAD.PA': [ 
+        { Societe: 'Icade', Montant: 1.00, Date: '06/03/2025', Versement: 'Annuel' }, 
+        { Societe: 'Icade', Montant: 1.16, Date: '06/03/2025', Versement: 'Annuel' },
+        { Societe: 'Icade', Montant: 2.15, Date: '03/07/2025', Versement: 'Annuel' } // [4, 32]
+    ],
+    'STMPA.PA': [ 
+        { Societe: 'STMicroelectronics', Montant: 0.09, Date: '26/03/2025', Versement: 'Trimestriel' },
+        { Societe: 'STMicroelectronics', Montant: 0.09, Date: '25/06/2025', Versement: 'Trimestriel' },
+        { Societe: 'STMicroelectronics', Montant: 0.09, Date: '24/09/2025', Versement: 'Trimestriel' },
+        { Societe: 'STMicroelectronics', Montant: 0.09, Date: '17/12/2025', Versement: 'Trimestriel' } // [5, 27, 39, 43]
+    ],
+    'ARG.PA': [ { Societe: 'Argan SA', Montant: 3.30, Date: '17/04/2025', Versement: 'Annuel' } ], // [5]
+    'DIM.PA': [ { Societe: 'Sartorius Stedim Biotech', Montant: 0.69, Date: '04/04/2025', Versement: 'Annuel' } ], // [6]
+    'AIR.PA': [ 
+        { Societe: 'Airbus SE', Montant: 1.00, Date: '24/04/2025', Versement: 'Annuel' }, 
+        { Societe: 'Airbus SE', Montant: 2.00, Date: '24/04/2025', Versement: 'Annuel' } // [8]
+    ],
+    'DG.PA': [ 
+        { Societe: 'Vinci', Montant: 3.70, Date: '24/04/2025', Versement: 'Annuel' },
+        { Societe: 'Vinci', Montant: 1.05, Date: '16/10/2025', Versement: 'Acompte' } // [8, 41]
+    ],
+    'STLAP.PA': [ { Societe: 'Stellantis NV', Montant: 0.68, Date: '05/05/2025', Versement: 'Annuel' } ], // [8]
+    'LVMH.PA': [ { Societe: 'LVMH', Montant: 7.50, Date: '28/04/2025', Versement: 'Solde' } ], // [9]
+    'TFI.PA': [ { Societe: 'TF1', Montant: 0.60, Date: '28/04/2025', Versement: 'Annuel' } ], // [9]
+    'ENGI.PA': [ { Societe: 'Engie', Montant: 1.48, Date: '29/04/2025', Versement: 'Annuel' } ], // [9]
+    'ITP.PA': [ { Societe: 'Interparfums', Montant: 1.15, Date: '30/04/2025', Versement: 'Annuel' } ], // [9]
+    'VCT.PA': [ { Societe: 'Vicat', Montant: 2.00, Date: '02/05/2025', Versement: 'Annuel' } ], // [9]
+    'OPM.PA': [ { Societe: 'Opmobility SE', Montant: 0.36, Date: '02/05/2025', Versement: 'Annuel' } ], // [9]
+    'VIV.PA': [ { Societe: 'Vivendi', Montant: 0.04, Date: '02/05/2025', Versement: 'Annuel' } ], // [9]
+    'COV.PA': [ { Societe: 'Covivio', Montant: 3.50, Date: '05/05/2025', Versement: 'Annuel' } ], // [10]
+    'SCR.PA': [ { Societe: 'SCOR SE', Montant: 1.80, Date: '06/05/2025', Versement: 'Annuel' } ], // [11]
+    'MERY.PA': [ { Societe: 'Mercialys', Montant: 1.00, Date: '06/05/2025', Versement: 'Annuel' } ], // [11]
+    'EN.PA': [ { Societe: 'Bouygues', Montant: 2.00, Date: '07/05/2025', Versement: 'Annuel' } ], // [11]
+    'MMT.PA': [ { Societe: 'Métropole Télévision SA (M6)', Montant: 1.25, Date: '07/05/2025', Versement: 'Annuel' } ], // [11]
+    'CS.PA': [ { Societe: 'AXA', Montant: 2.15, Date: '07/05/2025', Versement: 'Annuel' } ], // [11]
+    'OR.PA': [ { Societe: "L'Oréal", Montant: 7.00, Date: '07/05/2025', Versement: 'Annuel' } ], // [12]
+    'BN.PA': [ { Societe: 'Danone', Montant: 2.15, Date: '07/05/2025', Versement: 'Annuel' } ], // [12]
+    'EL.PA': [ { Societe: 'EssilorLuxottica', Montant: 3.95, Date: '05/06/2025', Versement: 'Annuel' } ], // [12]
+    'URW.PA': [ { Societe: 'Unibail-Rodamco', Montant: 3.50, Date: '12/05/2025', Versement: 'Annuel' } ], // [12]
+    'RNO.PA': [ { Societe: 'Renault', Montant: 2.20, Date: '12/05/2025', Versement: 'Annuel' } ], // [12]
+    'SAN.PA': [ { Societe: 'Sanofi', Montant: 3.92, Date: '14/05/2025', Versement: 'Annuel' } ], // [13]
+    'VIE.PA': [ { Societe: 'Veolia', Montant: 1.40, Date: '14/05/2025', Versement: 'Annuel' } ], // [13]
+    'SU.PA': [ 
+        { Societe: 'Schneider Electric', Montant: 1.37, Date: '15/05/2025', Versement: 'Acompte' }, 
+        { Societe: 'Schneider Electric', Montant: 2.53, Date: '15/05/2025', Versement: 'Solde' } // [13, 14]
+    ],
+    'VRLA.PA': [ { Societe: 'Verallia', Montant: 1.70, Date: '15/05/2025', Versement: 'Annuel' } ], // [14]
+    'RXL.PA': [ { Societe: 'Rexel', Montant: 1.20, Date: '16/05/2025', Versement: 'Annuel' } ], // [14]
+    'SPIE.PA': [ 
+        { Societe: 'Spie', Montant: 0.75, Date: '16/05/2025', Versement: 'Annuel' },
+        { Societe: 'Spie', Montant: 0.30, Date: '18/09/2025', Versement: 'Acompte' } // [14, 39]
+    ],
+    'BNP.PA': [ 
+        { Societe: 'BNP Paribas', Montant: 4.79, Date: '21/05/2025', Versement: 'Annuel' },
+        { Societe: 'BNP Paribas', Montant: 2.59, Date: '30/09/2025', Versement: 'Exceptionnel' } // [15, 40]
+    ],
+    'AI.PA': [ { Societe: 'Air Liquide', Montant: 3.30, Date: '21/05/2025', Versement: 'Annuel' } ], // [15]
+    'DEC.PA': [ { Societe: 'JC Decaux SA', Montant: 0.55, Date: '21/05/2025', Versement: 'Annuel' } ], // [15]
+    'NEX.PA': [ { Societe: 'Nexans SA', Montant: 2.60, Date: '21/05/2025', Versement: 'Annuel' } ], // [15]
+    'CARM.PA': [ { Societe: 'Carmila', Montant: 1.25, Date: '21/05/2025', Versement: 'Annuel' } ], // [16]
+    'COFA.PA': [ { Societe: 'Coface', Montant: 1.40, Date: '22/05/2025', Versement: 'Annuel' } ], // [16]
+    'NK.PA': [ { Societe: 'Imerys', Montant: 1.45, Date: '22/05/2025', Versement: 'Annuel' } ], // [16]
+    'HO.PA': [ 
+        { Societe: 'Thales', Montant: 2.85, Date: '22/05/2025', Versement: 'Solde' },
+        { Societe: 'Thales', Montant: 0.95, Date: '04/12/2025', Versement: 'Acompte' } // [16, 42]
+    ],
+    'CAP.PA': [ { Societe: 'Capgemini', Montant: 3.40, Date: '22/05/2025', Versement: 'Annuel' } ], // [16]
+    'TE.PA': [ { Societe: 'Technip Energies BV', Montant: 0.85, Date: '22/05/2025', Versement: 'Annuel' } ], // [16]
+    'AM.PA': [ { Societe: 'Dassault Aviation', Montant: 4.72, Date: '22/05/2025', Versement: 'Annuel' } ], // [16]
+    'FGR.PA': [ { Societe: 'Eiffage', Montant: 4.70, Date: '23/05/2025', Versement: 'Annuel' } ], // [16]
+    'MF.PA': [ 
+        { Societe: 'Wendel', Montant: 4.70, Date: '23/05/2025', Versement: 'Annuel' },
+        { Societe: 'Wendel', Montant: 1.50, Date: '20/11/2025', Versement: 'Exceptionnel' } // [17, 42]
+    ],
+    'TEP.PA': [ { Societe: 'Teleperformance', Montant: 4.20, Date: '28/05/2025', Versement: 'Annuel' } ], // [17]
+    'RF.PA': [ { Societe: 'Eurazeo', Montant: 2.65, Date: '28/05/2025', Versement: 'Annuel' } ], // [18]
+    'ENX.PA': [ { Societe: 'Euronext', Montant: 2.90, Date: '28/05/2025', Versement: 'Annuel' } ], // [18]
+    'ACA.PA': [ { Societe: 'Crédit Agricole', Montant: 1.10, Date: '28/05/2025', Versement: 'Annuel' } ], // [18]
+    'ELIS.PA': [ { Societe: 'Elis Services SA', Montant: 0.45, Date: '28/05/2025', Versement: 'Annuel' } ], // [18]
+    'VK.PA': [ { Societe: 'Vallourec', Montant: 1.50, Date: '28/05/2025', Versement: 'Annuel' } ], // [18]
+    'FR.PA': [ { Societe: 'Valeo', Montant: 0.42, Date: '28/05/2025', Versement: 'Annuel' } ], // [18]
+    'GLE.PA': [ 
+        { Societe: 'Société Générale', Montant: 1.09, Date: '28/05/2025', Versement: 'Annuel' },
+        { Societe: 'Société Générale', Montant: 0.61, Date: '09/10/2025', Versement: 'Trimestriel' } // [18, 41]
+    ],
+    'AKE.PA': [ { Societe: 'Arkema', Montant: 3.60, Date: '28/05/2025', Versement: 'Annuel' } ], // [18]
+    'DSY.PA': [ { Societe: 'Dassault Systèmes', Montant: 0.26, Date: '28/05/2025', Versement: 'Annuel' } ], // [18]
+    'AYV.PA': [ { Societe: 'Ayvens', Montant: 0.37, Date: '28/05/2025', Versement: 'Annuel' } ], // [19]
+    'FDJU.PA': [ { Societe: 'FDJ United', Montant: 2.05, Date: '03/06/2025', Versement: 'Annuel' } ], // [19]
+    'SAF.PA': [ { Societe: 'Safran', Montant: 2.90, Date: '02/06/2025', Versement: 'Annuel' } ], // [19]
+    'EXENS.PA': [ { Societe: 'Exosens', Montant: 0.10, Date: '30/05/2025', Versement: 'Annuel' } ], // [19]
+    'LR.PA': [ { Societe: 'Legrand', Montant: 2.20, Date: '02/06/2025', Versement: 'Annuel' } ], // [20]
+    'BB.PA': [ { Societe: 'Société BIC SA', Montant: 3.08, Date: '03/06/2025', Versement: 'Annuel' } ], // [20]
+    'TRI.PA': [ 
+        { Societe: 'Trigano', Montant: 1.75, Date: '03/06/2025', Versement: 'Annuel' },
+        { Societe: 'Trigano', Montant: 1.85, Date: '08/10/2025', Versement: 'Annuel' } // [20, 41]
+    ],
+    'CA.PA': [ 
+        { Societe: 'Carrefour', Montant: 0.23, Date: '03/06/2025', Versement: 'Annuel' },
+        { Societe: 'Carrefour', Montant: 0.92, Date: '03/06/2025', Versement: 'Annuel' } // [20]
+    ],
+    'ERA.PA': [ 
+        { Societe: 'Eramet', Montant: 1.35, Date: '04/06/2025', Versement: 'Annuel' },
+        { Societe: 'Eramet', Montant: 0.15, Date: '04/06/2025', Versement: 'Annuel' } // [21]
+    ],
+    'AC.PA': [ { Societe: 'Accor', Montant: 1.26, Date: '04/06/2025', Versement: 'Annuel' } ], // [21]
+    'GET.PA': [ { Societe: 'Getlink', Montant: 0.58, Date: '06/06/2025', Versement: 'Annuel' } ], // [21]
+    'ADP.PA': [ { Societe: 'Aeroports Paris', Montant: 3.00, Date: '05/06/2025', Versement: 'Annuel' } ], // [21]
+    'SK.PA': [ { Societe: 'Groupe SEB', Montant: 2.80, Date: '05/06/2025', Versement: 'Annuel' } ], // [21]
+    'SOP.PA': [ { Societe: 'Sopra Steria', Montant: 4.65, Date: '05/06/2025', Versement: 'Annuel' } ], // [22]
+    'ORA.PA': [ { Societe: 'Orange', Montant: 0.45, Date: '05/06/2025', Versement: 'Semestriel' } ], // [22]
+    'IPN.PA': [ { Societe: 'Ipsen', Montant: 1.40, Date: '06/06/2025', Versement: 'Annuel' } ], // [22]
+    'SGO.PA': [ { Societe: 'Saint-Gobain', Montant: 2.20, Date: '11/06/2025', Versement: 'Annuel' } ], // [23]
+    'BIM.PA': [ { Societe: 'Biomérieux', Montant: 0.90, Date: '11/06/2025', Versement: 'Annuel' } ], // [24]
+    'BOL.PA': [ 
+        { Societe: 'Bolloré', Montant: 0.06, Date: '12/06/2025', Versement: 'Annuel' },
+        { Societe: 'Bolloré', Montant: 0.02, Date: '30/09/2025', Versement: 'Exceptionnel' } // [24, 40]
+    ],
+    'AMUN.PA': [ { Societe: 'Amundi', Montant: 4.25, Date: '12/06/2025', Versement: 'Annuel' } ], // [24]
+    'EDEN.PA': [ { Societe: 'Edenred', Montant: 1.21, Date: '12/06/2025', Versement: 'Annuel' } ], // [24]
+    'ATE.PA': [ { Societe: 'Alten', Montant: 1.50, Date: '18/06/2025', Versement: 'Annuel' } ], // [25]
+    'RUI.PA': [ { Societe: 'Rubis', Montant: 2.03, Date: '19/06/2025', Versement: 'Annuel' } ], // [26]
+    'GTT.PA': [ { Societe: 'Gaztransport et Technigaz SA', Montant: 3.83, Date: '19/06/2025', Versement: 'Annuel' } ], // [26]
+    'PLNW.PA': [ { Societe: 'Planisware', Montant: 0.31, Date: '26/06/2025', Versement: 'Annuel' } ], // [28]
+    'VIRP.PA': [ { Societe: 'Virbac', Montant: 1.45, Date: '26/06/2025', Versement: 'Annuel' } ], // [28]
+    'VU.PA': [ { Societe: 'Vusiongroup', Montant: 0.60, Date: '26/06/2025', Versement: 'Annuel' } ], // [29]
+    'RBT.PA': [ { Societe: 'Robertet', Montant: 10.00, Date: '01/07/2025', Versement: 'Annuel' } ], // [30]
+    'BVI.PA': [ { Societe: 'Bureau Veritas', Montant: 0.90, Date: '03/07/2025', Versement: 'Annuel' } ], // [31]
+    'IPS.PA': [ { Societe: 'Ipsos', Montant: 1.85, Date: '03/07/2025', Versement: 'Annuel' } ], // [31]
+    'PUB.PA': [ { Societe: 'Publicis', Montant: 3.60, Date: '03/07/2025', Versement: 'Annuel' } ], // [32]
+    'RI.PA': [ 
+        { Societe: 'Pernod Ricard', Montant: 2.35, Date: '25/07/2025', Versement: 'Acompte' },
+        { Societe: 'Pernod Ricard', Montant: 2.35, Date: '26/11/2025', Versement: 'Solde' } // [36, 42]
+    ],
+    'MT.PA': [ { Societe: 'ArcelorMittal', Montant: 0.47, Date: '10/05/2025', Versement: 'Trimestriel' } ], // Non trouvé dans la liste détaillée, mais SBF 120 [44]
+    'ML.PA': [ { Societe: 'Michelin', Montant: 1.38, Date: '23/05/2025', Versement: 'Annuel' } ] // Non trouvé dans la liste détaillée, mais SBF 120 [44]
 };
 
-// Référence SBF 120 complète (Dividendes et Tickers)
-// Tickers et Dividendes extraits des sources [2-13, 23, 24] et [14-22, 25].
-const SBF120_DIVIDENDS_REFERENCE = {
-    // Tickers et Dividendes (Montant/action)
-    'ICAD.PA': { Societe: 'ICADE', MontantAction: 4.31, Versement: FREQUENCY_MAP[2] }, // [2, 5]
-    'SODX.PA': { Societe: 'SODEXO', MontantAction: 8.89, Versement: FREQUENCY_MAP[1] }, // [2, 5]
-    'MMT.PA': { Societe: 'M6 METROPOLE TELEVISION', MontantAction: 1.25, Versement: FREQUENCY_MAP[1] }, // [2, 5]
-    'VK.PA': { Societe: 'VALLOUREC', MontantAction: 1.50, Versement: FREQUENCY_MAP[1] }, // [2, 5]
-    'MERY.PA': { Societe: 'MERCIALYS', MontantAction: 1.00, Versement: FREQUENCY_MAP[1] }, // [2, 5]
-    'COFA.PA': { Societe: 'COFACE', MontantAction: 1.40, Versement: FREQUENCY_MAP[1] }, // [2, 5]
-    'RUI.PA': { Societe: 'RUBIS', MontantAction: 2.78, Versement: FREQUENCY_MAP[1] }, // [2, 5]
-    'SOLB.PA': { Societe: 'SOLVAY', MontantAction: 2.43, Versement: FREQUENCY_MAP[2] }, // [2, 5]
-    'CA.PA': { Societe: 'CARREFOUR', MontantAction: 1.15, Versement: FREQUENCY_MAP[1] }, // [2, 5]
-    // SOCIETE EUROPEENNE DES SATELLITES Ticker manquant
-    'FDJU.PA': { Societe: 'FDJ UNITED', MontantAction: 2.05, Versement: FREQUENCY_MAP[1] }, // [2, 6]
-    'VRLA.PA': { Societe: 'VERALLIA', MontantAction: 1.70, Versement: FREQUENCY_MAP[1] }, // [2, 6]
-    'STLAP.PA': { Societe: 'STELLANTIS NV', MontantAction: 0.68, Versement: FREQUENCY_MAP[1] }, // [2, 6]
-    'ENGI.PA': { Societe: 'ENGIE', MontantAction: 1.48, Versement: FREQUENCY_MAP[1] }, // [2, 6]
-    'CARM.PA': { Societe: 'CARMILA', MontantAction: 1.25, Versement: FREQUENCY_MAP[1] }, // [2, 6]
-    'TFI.PA': { Societe: 'TF1', MontantAction: 0.60, Versement: FREQUENCY_MAP[1] }, // [2, 6]
-    'AKE.PA': { Societe: 'ARKEMA', MontantAction: 3.60, Versement: FREQUENCY_MAP[1] }, // [2, 6]
-    'NK.PA': { Societe: 'IMERYS', MontantAction: 1.45, Versement: FREQUENCY_MAP[1] }, // [2, 6]
-    'ACA.PA': { Societe: 'CREDIT AGRICOLE', MontantAction: 1.10, Versement: FREQUENCY_MAP[1] }, // [2, 6]
-    'GFC.PA': { Societe: 'GECINA', MontantAction: 5.45, Versement: FREQUENCY_MAP[2] }, // [2, 6]
-    'TEP.PA': { Societe: 'TELEPERFORMANCE', MontantAction: 4.20, Versement: FREQUENCY_MAP[1] }, // [2, 6]
-    'AMUN.PA': { Societe: 'AMUNDI', MontantAction: 4.25, Versement: FREQUENCY_MAP[1] }, // [2, 6]
-    'BNP.PA': { Societe: 'BNP PARIBAS', MontantAction: 4.79, Versement: FREQUENCY_MAP[1] }, // [2, 6]
-    'RNO.PA': { Societe: 'RENAULT', MontantAction: 2.20, Versement: FREQUENCY_MAP[1] }, // [2, 7]
-    'APAM.PA': { Societe: 'APERAM', MontantAction: 2.00, Versement: FREQUENCY_MAP[4] }, // [2, 7]
-    'TTE.PA': { Societe: 'TOTALENERGIES SE', MontantAction: 3.34, Versement: FREQUENCY_MAP[4] }, // [2, 7]
-    'COV.PA': { Societe: 'COVIVIO', MontantAction: 3.50, Versement: FREQUENCY_MAP[1] }, // [2, 7]
-    'SCR.PA': { Societe: 'SCOR SE', MontantAction: 1.80, Versement: FREQUENCY_MAP[1] }, // [2, 7]
-    'MF.PA': { Societe: 'WENDEL', MontantAction: 4.70, Versement: FREQUENCY_MAP[1] }, // [2, 7]
-    'EDEN.PA': { Societe: 'EDENRED', MontantAction: 1.21, Versement: FREQUENCY_MAP[1] }, // [2, 7]
-    'BB.PA': { Societe: 'BIC', MontantAction: 3.08, Versement: FREQUENCY_MAP[1] }, // [2, 7]
-    'SK.PA': { Societe: 'SEB', MontantAction: 2.80, Versement: FREQUENCY_MAP[1] }, // [2, 7]
-    'LI.PA': { Societe: 'KLEPIERRE', MontantAction: 1.85, Versement: FREQUENCY_MAP[2] }, // [2, 7]
-    'CS.PA': { Societe: 'AXA', MontantAction: 2.15, Versement: FREQUENCY_MAP[1] }, // [2, 7]
-    'RI.PA': { Societe: 'PERNOD-RICARD', MontantAction: 4.70, Versement: FREQUENCY_MAP[2] }, // [3, 7]
-    'ORA.PA': { Societe: 'ORANGE', MontantAction: 0.75, Versement: FREQUENCY_MAP[2] }, // [3, 7]
-    'IPS.PA': { Societe: 'IPSOS', MontantAction: 1.85, Versement: FREQUENCY_MAP[1] }, // [3, 8]
-    'ML.PA': { Societe: 'MICHELIN', MontantAction: 1.38, Versement: FREQUENCY_MAP[1] }, // [3, 8]
-    'ARG.PA': { Societe: 'ARGAN', MontantAction: 3.30, Versement: FREQUENCY_MAP[1] }, // [3, 8]
-    'EN.PA': { Societe: 'BOUYGUES', MontantAction: 2.00, Versement: FREQUENCY_MAP[1] }, // [3, 8]
-    'GTT.PA': { Societe: 'GAZTRANSPORT ET TECHNIGAZ', MontantAction: 7.50, Versement: FREQUENCY_MAP[2] }, // [3, 8]
-    'VIE.PA': { Societe: 'VEOLIA', MontantAction: 1.40, Versement: FREQUENCY_MAP[1] }, // [3, 8]
-    'RF.PA': { Societe: 'EURAZEO', MontantAction: 2.65, Versement: FREQUENCY_MAP[1] }, // [3, 8]
-    'SAN.PA': { Societe: 'SANOFI', MontantAction: 3.92, Versement: FREQUENCY_MAP[1] }, // [3, 8]
-    'RXL.PA': { Societe: 'REXEL', MontantAction: 1.20, Versement: FREQUENCY_MAP[1] }, // [3, 8]
-    'OPM.PA': { Societe: 'OPMOBILITY', MontantAction: 0.60, Versement: FREQUENCY_MAP[2] }, // [3, 8]
-    'FR.PA': { Societe: 'VALEO', MontantAction: 0.42, Versement: FREQUENCY_MAP[1] }, // [3, 8]
-    'PUB.PA': { Societe: 'PUBLICIS GROUPE', MontantAction: 3.60, Versement: FREQUENCY_MAP[1] }, // [3, 8]
-    'FGR.PA': { Societe: 'EIFFAGE', MontantAction: 4.70, Versement: FREQUENCY_MAP[1] }, // [3, 8]
-    'DG.PA': { Societe: 'VINCI', MontantAction: 4.75, Versement: FREQUENCY_MAP[2] }, // [3, 9]
-    'URW.PA': { Societe: 'UNIBAIL-RODAMCO-WESTFIELD', MontantAction: 3.50, Versement: FREQUENCY_MAP[1] }, // [3, 9]
-    'ITP.PA': { Societe: 'INTERPARFUMS', MontantAction: 1.15, Versement: FREQUENCY_MAP[1] }, // [3, 9]
-    'GET.PA': { Societe: 'GETLINK SE', MontantAction: 0.58, Versement: FREQUENCY_MAP[1] }, // [3, 9]
-    'DEC.PA': { Societe: 'JCDECAUX', MontantAction: 0.55, Versement: FREQUENCY_MAP[1] }, // [3, 9]
-    'MRN.PA': { Societe: 'MERSEN', MontantAction: 0.90, Versement: FREQUENCY_MAP[1] }, // [3, 9]
-    'AYV.PA': { Societe: 'AYVENS', MontantAction: 0.37, Versement: FREQUENCY_MAP[1] }, // [3, 9]
-    'SOP.PA': { Societe: 'SOPRA STERIA GROUP', MontantAction: 4.65, Versement: FREQUENCY_MAP[1] }, // [3, 9]
-    'BVI.PA': { Societe: 'BUREAU VERITAS', MontantAction: 0.90, Versement: FREQUENCY_MAP[1] }, // [3, 9]
-    'VCT.PA': { Societe: 'VICAT', MontantAction: 2.00, Versement: FREQUENCY_MAP[1] }, // [3, 9]
-    'RCO.PA': { Societe: 'REMY COINTREAU', MontantAction: 1.50, Versement: FREQUENCY_MAP[1] }, // [3, 9]
-    'AC.PA': { Societe: 'ACCOR', MontantAction: 1.26, Versement: FREQUENCY_MAP[1] }, // [3, 9]
-    'CAP.PA': { Societe: 'CAPGEMINI', MontantAction: 3.40, Versement: FREQUENCY_MAP[1] }, // [3, 10]
-    'BN.PA': { Societe: 'DANONE', MontantAction: 2.15, Versement: FREQUENCY_MAP[1] }, // [3, 10]
-    'ADP.PA': { Societe: 'AEROPORTS DE PARIS', MontantAction: 3.00, Versement: FREQUENCY_MAP[1] }, // [3, 10]
-    'ERA.PA': { Societe: 'ERAMET', MontantAction: 1.50, Versement: FREQUENCY_MAP[1] }, // [3, 10]
-    'TRI.PA': { Societe: 'TRIGANO', MontantAction: 3.60, Versement: FREQUENCY_MAP[2] }, // [3, 10]
-    'SGO.PA': { Societe: 'SAINT-GOBAIN', MontantAction: 2.20, Versement: FREQUENCY_MAP[1] }, // [3, 10]
-    'ENX.PA': { Societe: 'EURONEXT N.V.', MontantAction: 2.90, Versement: FREQUENCY_MAP[1] }, // [3, 10]
-    'PLX.PA': { Societe: 'PLUXEE', MontantAction: 0.35, Versement: FREQUENCY_MAP[1] }, // [3, 10]
-    'TE.PA': { Societe: 'TECHNIP ENERGIES', MontantAction: 0.85, Versement: FREQUENCY_MAP[1] }, // [4, 10]
-    'ATE.PA': { Societe: 'ALTEN', MontantAction: 1.50, Versement: FREQUENCY_MAP[1] }, // [4, 10]
-    'SPIE.PA': { Societe: 'SPIE', MontantAction: 1.00, Versement: FREQUENCY_MAP[2] }, // [4, 10]
-    'DBG.PA': { Societe: 'DERICHEBOURG', MontantAction: 0.13, Versement: FREQUENCY_MAP[1] }, // [4, 10]
-    'LVMH.PA': { Societe: 'LVMH', MontantAction: 13.00, Versement: FREQUENCY_MAP[2] }, // [4, 10]
-    'NEX.PA': { Societe: 'NEXANS', MontantAction: 2.60, Versement: FREQUENCY_MAP[1] }, // [4, 11]
-    'GLE.PA': { Societe: 'SOCIETE GENERALE', MontantAction: 1.09, Versement: FREQUENCY_MAP[2] }, // [4, 11]
-    'KER.PA': { Societe: 'KERING', MontantAction: 6.00, Versement: FREQUENCY_MAP[2] }, // [4, 11]
-    'AI.PA': { Societe: 'AIR LIQUIDE', MontantAction: 3.30, Versement: FREQUENCY_MAP[1] }, // [4, 11]
-    'ELIS.PA': { Societe: 'ELIS S.A.', MontantAction: 0.45, Versement: FREQUENCY_MAP[1] }, // [4, 11]
-    'OR.PA': { Societe: "L'OREAL", MontantAction: 7.00, Versement: FREQUENCY_MAP[1] }, // [4, 11]
-    'AM.PA': { Societe: 'DASSAULT AVIATION', MontantAction: 4.72, Versement: FREQUENCY_MAP[1] }, // [4, 11]
-    'BOL.PA': { Societe: 'BOLLORE', MontantAction: 0.08, Versement: FREQUENCY_MAP[2] }, // [4, 11]
-    'PLNW.PA': { Societe: 'PLANISWARE', MontantAction: 0.31, Versement: FREQUENCY_MAP[1] }, // [4, 11]
-    'SU.PA': { Societe: 'SCHNEIDER ELECTRIC', MontantAction: 3.90, Versement: FREQUENCY_MAP[1] }, // [4, 11]
-    'LR.PA': { Societe: 'LEGRAND', MontantAction: 2.20, Versement: FREQUENCY_MAP[1] }, // [4, 11]
-    'HO.PA': { Societe: 'THALES', MontantAction: 3.70, Versement: FREQUENCY_MAP[2] }, // [4, 11]
-    'AIR.PA': { Societe: 'AIRBUS SE', MontantAction: 3.00, Versement: FREQUENCY_MAP[1] }, // [4, 12]
-    'MT.PA': { Societe: 'ARCELORMITTAL', MontantAction: 0.47, Versement: FREQUENCY_MAP[2] }, // [4, 12]
-    'VIV.PA': { Societe: 'VIVENDI', MontantAction: 0.04, Versement: FREQUENCY_MAP[1] }, // [4, 12]
-    'EL.PA': { Societe: 'ESSILORLUXOTTICA', MontantAction: 3.95, Versement: FREQUENCY_MAP[1] }, // [4, 12]
-    'STMPA.PA': { Societe: 'STMICROELECTRONICS', MontantAction: 0.31, Versement: FREQUENCY_MAP[4] }, // [4, 12]
-    'IPN.PA': { Societe: 'IPSEN', MontantAction: 1.40, Versement: FREQUENCY_MAP[1] }, // [4, 12]
-    'RBT.PA': { Societe: 'ROBERTET', MontantAction: 10.00, Versement: FREQUENCY_MAP[1] }, // [4, 12]
-    'RMS.PA': { Societe: 'HERMES INTERNATIONAL', MontantAction: 26.00, Versement: FREQUENCY_MAP[2] }, // [4, 12]
-    'SAF.PA': { Societe: 'SAFRAN', MontantAction: 2.90, Versement: FREQUENCY_MAP[1] }, // [4, 12]
-    'ERF.PA': { Societe: 'EUROFINS SCIENTIF', MontantAction: 0.60, Versement: FREQUENCY_MAP[1] }, // [4, 12]
-    'DSY.PA': { Societe: 'DASSAULT SYSTEMES', MontantAction: 0.26, Versement: FREQUENCY_MAP[1] }, // [4, 12]
-    'BIM.PA': { Societe: 'BIOMERIEUX', MontantAction: 0.90, Versement: FREQUENCY_MAP[1] }, // [4, 12]
-    'VIRP.PA': { Societe: 'VIRBAC SA', MontantAction: 1.45, Versement: FREQUENCY_MAP[1] }, // [4, 13]
-    'DIM.PA': { Societe: 'SARTORIUS STEDIM BIOTECH', MontantAction: 0.69, Versement: FREQUENCY_MAP[1] }, // [4, 13]
-    'VU.PA': { Societe: 'VUSIONGROUP', MontantAction: 0.60, Versement: FREQUENCY_MAP[1] }, // [4, 13]
-    'EXENS.PA': { Societe: 'EXOSENS', MontantAction: 0.10, Versement: FREQUENCY_MAP[1] }, // [4, 13]
-    'WLN.PA': { Societe: 'WORLDLINE', MontantAction: 0.00, Versement: FREQUENCY_MAP }, // [23, 24]
-    'AF.PA': { Societe: 'AIR FRANCE-KLM', MontantAction: 0.00, Versement: FREQUENCY_MAP }, // [4, 13]
-    'ALO.PA': { Societe: 'ALSTOM', MontantAction: 0.00, Versement: FREQUENCY_MAP }, // [13, 23]
-    'ATO.PA': { Societe: 'ATOS', MontantAction: 0.00, Versement: FREQUENCY_MAP } // [13, 23]
-};
 
-
-// Données initiales (pour peupler la table dès le début)
+// Données initiales (utilisent un événement de paiement réel)
 const initialData = [
-    { Societe: 'TOTALENERGIES SE', Ticker: 'TTE.PA', Quantite: 50, MontantAction: SBF120_DIVIDENDS_REFERENCE['TTE.PA'].MontantAction, Versement: SBF120_DIVIDENDS_REFERENCE['TTE.PA'].Versement, Statut: 'Prévu' }, 
-    { Societe: 'LVMH', Ticker: 'LVMH.PA', Quantite: 10, MontantAction: SBF120_DIVIDENDS_REFERENCE['LVMH.PA'].MontantAction, Versement: SBF120_DIVIDENDS_REFERENCE['LVMH.PA'].Versement, Statut: 'Versé' },
-    { Societe: 'AIR LIQUIDE', Ticker: 'AI.PA', Quantite: 25, MontantAction: SBF120_DIVIDENDS_REFERENCE['AI.PA'].MontantAction, Versement: SBF120_DIVIDENDS_REFERENCE['AI.PA'].Versement, Statut: 'Prévu' }
+    { Societe: 'TOTALENERGIES SE', Ticker: 'TTE.PA', Quantite: 50, MontantAction: SBF120_PAYMENT_SCHEDULE['TTE.PA'].Montant, Versement: SBF120_PAYMENT_SCHEDULE['TTE.PA'].Versement, DateVersement: SBF120_PAYMENT_SCHEDULE['TTE.PA'].Date, Statut: 'Prévu' }, 
+    { Societe: 'LVMH', Ticker: 'LVMH.PA', Quantite: 10, MontantAction: SBF120_PAYMENT_SCHEDULE['LVMH.PA'].Montant, Versement: SBF120_PAYMENT_SCHEDULE['LVMH.PA'].Versement, DateVersement: SBF120_PAYMENT_SCHEDULE['LVMH.PA'].Date, Statut: 'Versé' },
+    { Societe: 'AIR LIQUIDE', Ticker: 'AI.PA', Quantite: 25, MontantAction: SBF120_PAYMENT_SCHEDULE['AI.PA'].Montant, Versement: SBF120_PAYMENT_SCHEDULE['AI.PA'].Versement, DateVersement: SBF120_PAYMENT_SCHEDULE['AI.PA'].Date, Statut: 'Prévu' }
 ];
 
 let dividendsData = [];
@@ -140,7 +186,7 @@ function loadLocalData() {
     if (storedData) {
         dividendsData = JSON.parse(storedData);
     } else {
-        dividendsData = initialData; // Charge les données initiales
+        dividendsData = initialData;
     }
 }
 
@@ -149,6 +195,7 @@ function saveLocalData() {
 }
 
 function calculateEstimatedTotal() {
+    // Le calcul utilise les montants individuels des paiements listés
     return dividendsData.reduce((total, stock) => {
         const totalAction = (parseFloat(stock.Quantite) || 0) * (parseFloat(stock.MontantAction) || 0);
         return total + totalAction;
@@ -181,24 +228,24 @@ function toggleEditMode() {
     renderDividendsTable(); 
 }
 
-// --- Logique d'Ajout d'action SBF 120 ---
+// --- Logique d'Ajout d'action SBF 120 (MISE À JOUR) ---
 
 function addNewStockSBF120() {
-    // La liste complète des tickers est maintenant dans SBF120_DIVIDENDS_REFERENCE
+    const availableTickers = Object.keys(SBF120_PAYMENT_SCHEDULE).sort().join(', ');
     
-    let tickerInput = prompt(`Entrez le Ticker SBF 120 (Ex: ICAD.PA, BNP.PA, LVMH.PA, TTE.PA).`);
+    let tickerInput = prompt(`Entrez le Ticker SBF 120 (Ex: TTE.PA, KER.PA). Tickers disponibles: ${Object.keys(SBF120_PAYMENT_SCHEDULE).slice(0, 5).join(', ')}, etc.`);
     
     if (!tickerInput) return;
 
     tickerInput = tickerInput.toUpperCase().trim();
-    const referenceStock = SBF120_DIVIDENDS_REFERENCE[tickerInput];
+    const payments = SBF120_PAYMENT_SCHEDULE[tickerInput];
     
-    if (!referenceStock) {
-        alert("Ticker non valide ou non trouvé dans la liste SBF 120 interne. Veuillez vérifier la casse (ex: TTE.PA).");
+    if (!payments || payments.length === 0) {
+        alert("Ticker non valide ou aucune date de dividende trouvée pour ce Ticker SBF 120 pour l'année prochaine dans la liste interne.");
         return;
     }
 
-    const quantityInput = prompt(`Entrez la quantité détenue pour ${referenceStock.Societe} (Dividende/action: ${referenceStock.MontantAction}€) :`);
+    const quantityInput = prompt(`Entrez la quantité détenue pour ${payments.Societe} (${tickerInput}) :`);
     const quantity = parseInt(quantityInput, 10);
 
     if (isNaN(quantity) || quantity <= 0) {
@@ -206,16 +253,20 @@ function addNewStockSBF120() {
         return;
     }
     
-    const newStock = {
-        Societe: referenceStock.Societe,
-        Ticker: tickerInput,
-        Quantite: quantity,
-        MontantAction: referenceStock.MontantAction,
-        Versement: referenceStock.Versement || 'Annuel',
-        Statut: 'Prévu' 
-    };
-    
-    dividendsData.push(newStock);
+    // Ajout de TOUS les événements de paiement pour ce Ticker
+    payments.forEach(payment => {
+        const newStock = {
+            Societe: payment.Societe,
+            Ticker: tickerInput,
+            Quantite: quantity,
+            MontantAction: payment.Montant, // Montant par PAIEMENT
+            Versement: payment.Versement || 'Annuel',
+            DateVersement: payment.Date, // DATE DE PAIEMENT RENSEIGNÉE
+            Statut: 'Prévu' 
+        };
+        dividendsData.push(newStock);
+    });
+
     saveLocalData();
     renderDividendsTable();
 }
@@ -253,24 +304,26 @@ function renderDividendsTable() {
             quantityCell.textContent = stock.Quantite;
         }
         
-        // Montant/action (Dividende)
         row.insertCell().textContent = parseFloat(stock.MontantAction).toFixed(2) + '€';
-        
-        // Total estimé (Calculé)
         row.insertCell().textContent = total + '€';
-        
         row.insertCell().textContent = stock.Versement;
+        
+        // Colonne Date Prévue (utilisant la date de paiement du fichier source)
+        row.insertCell().textContent = stock.DateVersement || 'N/A'; // [1-43]
+        
         row.insertCell().textContent = stock.Statut;
         
         row.insertCell().textContent = ''; // Colonne Action
     });
     
-    // Mise à jour des totaux et du nombre de sociétés
+    // Mise à jour des totaux
     if (estimatedTotalElement) {
         estimatedTotalElement.textContent = calculateEstimatedTotal() + '€';
     }
+    // Le nombre de sociétés est le nombre unique de tickers
+    const uniqueTickers = new Set(dividendsData.map(d => d.Ticker));
     if (totalSocietiesElement) {
-        totalSocietiesElement.textContent = dividendsData.length; // [1]
+        totalSocietiesElement.textContent = uniqueTickers.size;
     }
 }
 
@@ -279,14 +332,12 @@ document.addEventListener('DOMContentLoaded', () => {
     loadLocalData();
     renderDividendsTable();
     
-    // Attachement des écouteurs des boutons
     const editButton = document.getElementById('editButton');
-    const addButton = document.getElementById('addButton');
-
     if (editButton) {
         editButton.addEventListener('click', toggleEditMode);
     }
     
+    const addButton = document.getElementById('addButton');
     if (addButton) {
         addButton.addEventListener('click', addNewStockSBF120);
     }
